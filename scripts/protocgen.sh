@@ -59,6 +59,6 @@ buf protoc -I "proto" -I "third_party/proto" -I "x/group/testdata" --gocosmos_ou
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./x/group/testdata/*.proto
 
 # move proto files to the right places
-cp -r github.com/regen-network/regen-ledger/* ./
+cp -r github.com/envadiv/passage3d/* ./
 rm -rf github.com
 
