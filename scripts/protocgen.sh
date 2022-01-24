@@ -54,11 +54,5 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
 
 done
 
-# generate codec/testdata proto code
-buf protoc -I "proto" -I "third_party/proto" -I "x/group/testdata" --gocosmos_out=plugins=interfacetype+grpc,\
-Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. ./x/group/testdata/*.proto
-
 # move proto files to the right places
-cp -r github.com/envadiv/passage3d/* ./
-rm -rf github.com
-
+cp -r github.com/vitwit/p3d/* ./
