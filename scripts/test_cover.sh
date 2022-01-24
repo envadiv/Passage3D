@@ -10,11 +10,13 @@ for m in ${SUBMODULES[@]}; do
     cd $CURDIR/$m
     PKGS=$(go list ./...)
     for pkg in ${PKGS[@]}; do
+      if [ $pkg != "github.com/envadiv/Passage3D/cmd/passage/cmd" ]; then
         go test -v -timeout 30m -race -coverpkg=all -coverprofile=profile.out -covermode=atomic -tags="ledger test_ledger_mock" "$pkg"
         if [ -f profile.out ]; then
             tail -n +2 profile.out >> $CURDIR/coverage.txt;
             rm profile.out
         fi
+      fi
     done
 done
 
