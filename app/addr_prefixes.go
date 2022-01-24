@@ -9,17 +9,17 @@ import (
 
 const (
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-	Bech32PrefixAccAddr = "passage"
+	Bech32PrefixAccAddr = "pasg"
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = "passagepub"
+	Bech32PrefixAccPub = "pasgpub"
 	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = "passagevaloper"
+	Bech32PrefixValAddr = "pasgvaloper"
 	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = "passagevaloperpub"
+	Bech32PrefixValPub = "pasgvaloperpub"
 	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = "passagevalcons"
+	Bech32PrefixConsAddr = "pasgvalcons"
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = "passagevalconspub"
+	Bech32PrefixConsPub = "pasgvalconspub"
 )
 
 func init() {

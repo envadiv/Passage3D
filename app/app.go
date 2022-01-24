@@ -84,7 +84,7 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v2/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v2/modules/core"
@@ -96,7 +96,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
-const appName = "passage3d"
+const appName = "passage"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -200,11 +200,11 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".passage3d")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".passage")
 }
 
-// NewPassage3dApp returns a reference to an initialized Passage3dApp.
-func NewPassage3dApp(
+// NewPassageApp returns a reference to an initialized PassageApp.
+func NewPassageApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig simappparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),

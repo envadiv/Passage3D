@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/envadiv/Passage3D/app"
-	"github.com/envadiv/Passage3D/passage3d/cmd"
+	"github.com/envadiv/Passage3D/passage/cmd"
 	"github.com/stretchr/testify/require"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
