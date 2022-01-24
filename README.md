@@ -69,7 +69,7 @@ Source profile file:
 
 ## Installation
 
-### Install `Passage3d`
+### Install `Passage`
 
 ```shell
 git clone https://github.com/envadiv/Passage3D
@@ -78,10 +78,10 @@ git checkout v1.0.0-rc1
 make install
 
 # verify the installation
-passage3d version
+passage version
 ```
 
 ### Create Accounts
 ```shell
-passage3d keys add test
+passage keys add test
 ```

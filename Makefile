@@ -8,7 +8,7 @@ COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
-APP = ./passage3d
+APP = ./passage
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/envadiv/Passage3D.git
 DOCKER := $(shell which docker)
@@ -53,8 +53,8 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=passage3d \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=passage3d \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=passage \
+		  -X github.com/cosmos/cosmos-sdk/version.AppName=passage \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
@@ -116,33 +116,33 @@ $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
-build-passage3d-all: go.sum
+build-passage-all: go.sum
 	$(DOCKER) rm latest-build || true
 	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
-        --env APP=passage3d \
+        --env APP=passage \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
         --name latest-build cosmossdk/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
-build-passage3d-linux: go.sum $(BUILDDIR)/
+build-passage-linux: go.sum $(BUILDDIR)/
 	$(DOCKER) rm latest-build || true
 	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64' \
-        --env APP=passage3d \
+        --env APP=passage \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=false \
         --name latest-build cosmossdk/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
-	cp artifacts/passage3d-*-linux-amd64 $(BUILDDIR)/passage3d
+	cp artifacts/passage-*-linux-amd64 $(BUILDDIR)/passage
 
 cosmovisor:
 	$(MAKE) -C cosmovisor cosmovisor
 
-.PHONY: build build-linux build-simpassage3dd-all build-passage3d-linux
+.PHONY: build build-linux build-passage-all build-passage-linux
 
 mockgen_cmd=go run github.com/golang/mock/mockgen
 
@@ -253,8 +253,8 @@ test-sim-nondeterminism:
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
-	@echo "By default, ${HOME}/.passage3d/config/genesis.json will be used."
-	@go test -mod=readonly $(APP) -run TestFullAppSimulation -Genesis=${HOME}/.passage3d/config/genesis.json \
+	@echo "By default, ${HOME}/.passage/config/genesis.json will be used."
+	@go test -mod=readonly $(APP) -run TestFullAppSimulation -Genesis=${HOME}/.passage/config/genesis.json \
 		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
 test-sim-import-export: runsim
@@ -267,8 +267,8 @@ test-sim-after-import: runsim
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
-	@echo "By default, ${HOME}/.passage3d/config/genesis.json will be used."
-	@$(BINDIR)/runsim -Genesis=${HOME}/.passage3d/config/genesis.json -SimAppPkg=$(APP) -ExitOnFail 400 5 TestFullAppSimulation
+	@echo "By default, ${HOME}/.passage/config/genesis.json will be used."
+	@$(BINDIR)/runsim -Genesis=${HOME}/.passage/config/genesis.json -SimAppPkg=$(APP) -ExitOnFail 400 5 TestFullAppSimulation
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
@@ -482,8 +482,8 @@ proto-update-deps:
 
 # Run a 4-node testnet locally
 localnet-start: build-linux localnet-stop
-	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' cosmossdk/passage3d-env 2>/dev/null),$(info found image cosmossdk/passage3d-env),$(MAKE) -C contrib/images passage3d-env)
-	$(DOCKER) run --rm -v $(CURDIR)/localnet:/data cosmossdk/passage3d-env \
+	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' cosmossdk/passage-env 2>/dev/null),$(info found image cosmossdk/passage-env),$(MAKE) -C contrib/images passage-env)
+	$(DOCKER) run --rm -v $(CURDIR)/localnet:/data cosmossdk/passage-env \
 		testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
 	docker-compose up -d
 
