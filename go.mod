@@ -1,6 +1,6 @@
 go 1.17
 
-module github.com/vitwit/p3d
+module github.com/envadiv/Passage3D
 
 require (
 	github.com/cosmos/cosmos-sdk v0.45.0
