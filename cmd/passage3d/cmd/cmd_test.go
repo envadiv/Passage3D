@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/envadiv/Passage3D/app"
+	"github.com/envadiv/Passage3D/passage3d/cmd"
 	"github.com/stretchr/testify/require"
-	"github.com/vitwit/p3d/app"
-	"github.com/vitwit/p3d/passage3d/cmd"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"

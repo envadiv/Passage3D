@@ -31,7 +31,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/vitwit/p3d/app"
+	"github.com/envadiv/Passage3D/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the

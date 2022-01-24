@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	simcmd "github.com/vitwit/p3d/cmd"
+	simcmd "github.com/envadiv/Passage3D/cmd"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
