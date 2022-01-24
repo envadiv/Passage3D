@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/vitwit/p3d/app"
-	"github.com/vitwit/p3d/passage3d/cmd"
+	"github.com/vitwit/p3d/cmd/passage3d/cmd"
 )
 
 func main() {

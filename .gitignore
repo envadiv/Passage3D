@@ -12,3 +12,4 @@ sim_log_file
 
 # IDE
 .vscode
+.idea
