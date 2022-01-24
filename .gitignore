@@ -1,0 +1,15 @@
+# private files
+private[.-]*
+private
+
+# Build
+build
+artifacts
+# Testing
+coverage.txt
+profile.out
+sim_log_file
+
+# IDE
+.vscode
+.idea
