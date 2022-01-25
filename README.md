@@ -2,8 +2,7 @@
 
 ## Getting Started
 This document provides instructions for running a single node network on your local machine and then
-submitting your first few transactions to that network using the command line. Running a single node network
-is a great way to get familiar with Regen Ledger and its functionality.
+submitting your first few transactions to that network using the command line.
 
 ## Prerequisites
 
