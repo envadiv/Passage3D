@@ -384,9 +384,9 @@ devdoc-update:
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
-containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
+containerProtoGen=passage3d-proto-gen-$(containerProtoVer)
+containerProtoGenSwagger=passage3d-proto-gen-swagger-$(containerProtoVer)
+containerProtoFmt=passage3d-proto-fmt-$(containerProtoVer)
 
 proto-all: proto-format proto-lint proto-gen
 

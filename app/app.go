@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/envadiv/Passage3D/x/claim"
 	"io"
 	"net/http"
 	"os"
@@ -91,6 +92,8 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
+	claimkeeper "github.com/envadiv/Passage3D/x/claim/keeper"
+	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -126,6 +129,9 @@ var (
 		vesting.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		transfer.AppModuleBasic{}, // i.e ibc-transfer module
+
+		// passage3d claim module
+		claim.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -137,6 +143,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -184,6 +191,8 @@ type PassageApp struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
+	ClaimKeeper claimkeeper.Keeper
+
 	// the module manager
 	mm *module.Manager
 
@@ -224,7 +233,7 @@ func NewPassageApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey,
+		authzkeeper.StoreKey, claimtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
@@ -327,6 +336,7 @@ func NewPassageApp(
 		scopedIBCKeeper,
 	)
 
+	app.ClaimKeeper = claimkeeper.NewKeeper(appCodec, keys[claimtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper)
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
@@ -377,6 +387,7 @@ func NewPassageApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
+		claim.NewAppModule(appCodec, app.ClaimKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -403,6 +414,7 @@ func NewPassageApp(
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
+		claimtypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName,
@@ -423,6 +435,7 @@ func NewPassageApp(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		claimtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -449,6 +462,7 @@ func NewPassageApp(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		claimtypes.ModuleName,
 	)
 
 	// Uncomment if you want to set a custom migration order here.
@@ -659,7 +673,8 @@ func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	}
 
 	staticServer := http.FileServer(statikFS)
-	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
+	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticServer))
+	rtr.PathPrefix("/swagger/").Handler(staticServer)
 }
 
 // GetMaccPerms returns a copy of the module account permissions
@@ -685,6 +700,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(claimtypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -2,52 +2,33 @@
 
 set -eo pipefail
 
-protoc_gen_gocosmos() {
-  if ! grep "github.com/gogo/protobuf => github.com/regen-network/protobuf" go.mod &>/dev/null ; then
-    echo -e "\tPlease run this command from somewhere inside the regen-ledger folder."
-    return 1
-  fi
+# get protoc executions
+go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
+# get cosmos sdk from github
+go get github.com/cosmos/cosmos-sdk 2>/dev/null
 
-  go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
-}
-
-protoc_gen_gocosmos
-go mod tidy
-
-proto_dirs=$(find ./proto -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
+# Get the path of the cosmos-sdk repo from go/pkg/mod
+cosmos_sdk_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/cosmos-sdk)
+proto_dirs=$(find . -path ./third_party -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
+  # generate protobuf bind
   buf protoc \
   -I "proto" \
-  -I "third_party/proto" \
+  -I "$cosmos_sdk_dir/third_party/proto" \
+  -I "$cosmos_sdk_dir/proto" \
   --gocosmos_out=plugins=interfacetype+grpc,\
-Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
-Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
-Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
-Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types,\
 Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
-  $(find "${dir}" -maxdepth 1 -name '*.proto')
+  $(find "${dir}" -name '*.proto')
 
-  # command to generate gRPC gateway (*.pb.gw.go in respective modules) files
+  # generate grpc gateway
   buf protoc \
   -I "proto" \
-  -I "third_party/proto" \
-  --grpc-gateway_out=logtostderr=true,allow_colon_final_segments=true:. \
+  -I "$cosmos_sdk_dir/third_party/proto" \
+  -I "$cosmos_sdk_dir/proto" \
+  --grpc-gateway_out=logtostderr=true:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
-
-  # get the module name, e.g. from "./proto/regen/data/v1alpha1", extract "data"
-  module=$(basename $(dirname $dir))
-
-  mkdir -p ./docs/modules/${module}
-
-  # command to generate docs using protoc-gen-doc
-  buf protoc \
-  -I "proto" \
-  -I "third_party/proto" \
-  --doc_out=./x/${module}/spec \
-  --doc_opt=docs/markdown.tmpl,protobuf.md \
-  $(find "${dir}" -maxdepth 1 -name '*.proto')
-
 done
 
-# move proto files to the right places
 cp -r github.com/envadiv/Passage3D/* ./
+rm -rf github.com
+
