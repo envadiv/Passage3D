@@ -421,7 +421,7 @@ proto-lint:
 proto-check-breaking:
 	@echo "Checking Proto Breaking "
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoBreaking}$$"; then docker start -a $(containerProtoBreaking); else docker run --name $(containerProtoBreaking)  -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.0.0-rc8 \
-	 breaking --against '.git#branch=main' ;	fi
+	 breaking --against $(HTTPS_GIT)#branch=main ;	fi
 
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
