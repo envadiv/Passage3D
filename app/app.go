@@ -2,11 +2,12 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/envadiv/Passage3D/x/claim"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/envadiv/Passage3D/x/claim"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"

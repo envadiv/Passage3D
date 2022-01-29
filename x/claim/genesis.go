@@ -1,10 +1,11 @@
 package claim
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/envadiv/Passage3D/x/claim/keeper"
 	"github.com/envadiv/Passage3D/x/claim/types"
-	"time"
 )
 
 // InitGenesis initializes the claim module's state from a provided genesis state.
