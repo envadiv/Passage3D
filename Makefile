@@ -388,6 +388,7 @@ containerProtoGen=passage3d-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=passage3d-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=passage3d-proto-fmt-$(containerProtoVer)
 containerProtoLint=passage3d-proto-lint-$(containerProtoVer)
+containerProtoBreaking=passage3d-proto-break-$(containerProtoVer)
 
 proto-all: proto-format proto-lint proto-gen
 
@@ -418,7 +419,9 @@ proto-lint:
 	lint --error-format=json ;	fi
 
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
+	@echo "Checking Proto Breaking "
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoBreaking}$$"; then docker start -a $(containerProtoBreaking); else docker run --name $(containerProtoBreaking)  -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.0.0-rc8 \
+	 breaking --against $(HTTPS_GIT)#branch=master ;	fi
 
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint

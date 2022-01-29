@@ -28,3 +28,5 @@ jobs:
       - name: check-breakage
         run: make proto-check-breaking
         if: env.GIT_DIFF
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
