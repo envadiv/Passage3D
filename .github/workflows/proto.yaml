@@ -30,3 +30,6 @@ jobs:
         if: env.GIT_DIFF
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
+          BUF_INPUT_HTTPS_USERNAME: ${{ env.GITHUB_REPOSITORY_OWNER	}}
+          BUF_INPUT_HTTPS_PASSWORD: ${{ secrets.github_token }}
+
