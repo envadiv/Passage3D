@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/envadiv/Passage3D/x/claim"
 	"os"
 	"testing"
 
@@ -186,6 +187,7 @@ func TestRunMigrations(t *testing.T) {
 					"capability":   capability.AppModule{}.ConsensusVersion(),
 					"ibc":          ibc.AppModule{}.ConsensusVersion(),
 					"transfer":     transfer.AppModule{}.ConsensusVersion(),
+					"claim":        claim.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
