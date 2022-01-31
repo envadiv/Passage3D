@@ -127,7 +127,6 @@ func request_Query_ClaimableForAction_0(ctx context.Context, marshaler runtime.M
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -149,13 +148,11 @@ func request_Query_ClaimableForAction_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "action")
 	}
 
-	e, err = runtime.Enum(val, Action_value)
+	protoReq.Action, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "action", err)
 	}
-
-	protoReq.Action = Action(e)
 
 	msg, err := client.ClaimableForAction(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -168,7 +165,6 @@ func local_request_Query_ClaimableForAction_0(ctx context.Context, marshaler run
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -190,13 +186,11 @@ func local_request_Query_ClaimableForAction_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "action")
 	}
 
-	e, err = runtime.Enum(val, Action_value)
+	protoReq.Action, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "action", err)
 	}
-
-	protoReq.Action = Action(e)
 
 	msg, err := server.ClaimableForAction(ctx, &protoReq)
 	return msg, metadata, err

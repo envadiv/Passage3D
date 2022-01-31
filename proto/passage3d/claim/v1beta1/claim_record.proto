@@ -7,13 +7,6 @@ import "cosmos/bank/v1beta1/genesis.proto";
 
 option go_package = "github.com/envadiv/passage3d/x/claim/types";
 
-enum Action {
-  option (gogoproto.goproto_enum_prefix) = false;
-
-  // TODO: We need to add actions
-  ActionDelegateStake = 0;
-}
-
 // A Claim Records is the metadata of claim data per address
 message ClaimRecord {
   // address of claim user

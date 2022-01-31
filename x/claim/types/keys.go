@@ -25,3 +25,5 @@ var (
 	// ClaimRecordsStorePrefix defines the store prefix for the claim records
 	ClaimRecordsStorePrefix = []byte{0x01}
 )
+
+// Actions

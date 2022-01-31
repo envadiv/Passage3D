@@ -38,7 +38,6 @@ service Query {
 
 }
 
-
 // QueryModuleAccountBalanceRequest is the request type for the Query/ModuleAccountBalance RPC method.
 message QueryModuleAccountBalanceRequest {}
 
@@ -52,7 +51,6 @@ message QueryModuleAccountBalanceResponse {
   ];
 }
 
-
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
 
@@ -62,11 +60,12 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-
+// QueryClaimRecordRequest is the request type for the Query/ClaimRecord RPC method.
 message QueryClaimRecordRequest {
-  string address = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
+  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
 }
 
+// QueryClaimRecordResponse is the response type for the Query/ClaimRecord RPC method.
 message QueryClaimRecordResponse {
   ClaimRecord claim_record = 1 [
     (gogoproto.moretags) = "yaml:\"claim_record\"",
@@ -74,11 +73,13 @@ message QueryClaimRecordResponse {
   ];
 }
 
+// QueryClaimableForActionRequest is the request type for the Query/ClaimRecord RPC method.
 message QueryClaimableForActionRequest {
   string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
-  Action action = 2 [(gogoproto.moretags) = "yaml:\"action\""];
+  string action = 2 [(gogoproto.moretags) = "yaml:\"action\""];
 }
 
+// QueryClaimableForActionResponse is the response type for the Query/ClaimRecord RPC method.
 message QueryClaimableForActionResponse {
   repeated cosmos.base.v1beta1.Coin coins = 1 [
     (gogoproto.moretags) = "yaml:\"coins\"",
@@ -87,10 +88,12 @@ message QueryClaimableForActionResponse {
   ];
 }
 
+// QueryTotalClaimableRequest is the request type for the Query/TotalClaimableRequest RPC method.
 message QueryTotalClaimableRequest {
   string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
 }
 
+// QueryTotalClaimableResponse is the response type for the Query/TotalClaimableResponse RPC method.
 message QueryTotalClaimableResponse {
   repeated cosmos.base.v1beta1.Coin coins = 1 [
     (gogoproto.moretags) = "yaml:\"coins\"",

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -54,7 +55,12 @@ func (k Keeper) ClaimableForAction(goCtx context.Context, req *types.QueryClaima
 		return nil, err
 	}
 
-	coins, err := k.GetClaimableAmountForAction(ctx, addr, req.Action)
+	action, ok := types.Action_value[req.Action]
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid action type: %s", req.Action))
+	}
+
+	coins, err := k.GetClaimableAmountForAction(ctx, addr, types.Action(action))
 
 	return &types.QueryClaimableForActionResponse{
 		Coins: coins,
