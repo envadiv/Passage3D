@@ -4,6 +4,7 @@ package passage3d.claim.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "passage3d/claim/v1beta1/params.proto";
+import "passage3d/claim/v1beta1/claim_record.proto";
 
 option go_package = "github.com/envadiv/passage3d/x/claim/types";
 
@@ -18,6 +19,12 @@ message GenesisState {
   // params defines all the parameters of the module.
   Params params = 2 [
     (gogoproto.moretags) = "yaml:\"params\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // list of claim records, one for every airdrop recipient
+  repeated ClaimRecord claim_records = 3 [
+    (gogoproto.moretags) = "yaml:\"claim_records\"",
     (gogoproto.nullable) = false
   ];
 }

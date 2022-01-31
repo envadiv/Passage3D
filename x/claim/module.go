@@ -99,9 +99,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 func (am AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
 	jsonCodec.MustUnmarshalJSON(gs, &genState)
-	InitGenesis(ctx, am.keeper, genState)
-
-	return []abci.ValidatorUpdate{}
+	return InitGenesis(ctx, am.keeper, genState)
 }
 
 // ExportGenesis returns the claim module's exported genesis state as raw JSON bytes.
@@ -137,5 +135,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 }
 
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, am.keeper)
+	EndBlocker(ctx, am.keeper)
+	return []abci.ValidatorUpdate{}
 }

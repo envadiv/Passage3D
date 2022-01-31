@@ -11,6 +11,18 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 }
 
 // EndBlocker is called on every block
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
+	params := k.GetParams(ctx)
+	if !params.IsAirdropEnabled(ctx.BlockTime()) {
+		return
+	}
+	// End Airdrop
+	goneTime := ctx.BlockTime().Sub(params.AirdropStartTime)
+	if goneTime > params.DurationUntilDecay+params.DurationOfDecay {
+		// airdrop time passed
+		err := k.EndAirdrop(ctx)
+		if err != nil {
+			panic(err)
+		}
+	}
 }

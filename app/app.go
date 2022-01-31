@@ -338,7 +338,7 @@ func NewPassageApp(
 		scopedIBCKeeper,
 	)
 
-	app.ClaimKeeper = claimkeeper.NewKeeper(appCodec, keys[claimtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper)
+	app.ClaimKeeper = claimkeeper.NewKeeper(appCodec, keys[claimtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.GetSubspace(claimtypes.ModuleName))
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,

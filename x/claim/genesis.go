@@ -3,13 +3,15 @@ package claim
 import (
 	"time"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/envadiv/Passage3D/x/claim/keeper"
 	"github.com/envadiv/Passage3D/x/claim/types"
 )
 
 // InitGenesis initializes the claim module's state from a provided genesis state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) []abci.ValidatorUpdate {
 	// set up the module account with balance
 	k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
 
@@ -17,20 +19,21 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.Params.AirdropStartTime.Equal(time.Time{}) {
 		genState.Params.AirdropStartTime = ctx.BlockTime()
 	}
-
-	if err := k.SetParams(ctx, genState.Params); err != nil {
+	err := k.SetClaimRecords(ctx, genState.ClaimRecords)
+	if err != nil {
 		panic(err)
 	}
+
+	k.SetParams(ctx, genState.Params)
+	return nil
 }
 
 // ExportGenesis returns the claim module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		panic(err)
-	}
 	genesis := types.DefaultGenesis()
+	params := k.GetParams(ctx)
 	genesis.Params = params
 	genesis.ModuleAccountBalance = k.GetModuleAccountBalance(ctx)
+	genesis.ClaimRecords = k.GetClaimRecords(ctx)
 	return genesis
 }
