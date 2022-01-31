@@ -4,7 +4,7 @@ package passage3d.claim.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/envadiv/Passage3D/x/claim/types";
+option go_package = "github.com/envadiv/passage3d/x/claim/types";
 
 // Params defines the claim module's parameters.
 message Params {

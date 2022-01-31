@@ -4,7 +4,7 @@
 # This module represents the "proto" root found in
 # the previous configuration.
 version: v1beta1
-name: buf.build/passage3d/passage3d-sdk
+name: buf.build/passage3d/passage
 deps:
   - buf.build/cosmos/cosmos-sdk
   - buf.build/cosmos/gogo-proto
