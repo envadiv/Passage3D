@@ -39,7 +39,7 @@ jobs:
         if: matrix.envs == 'stable-codecov'
         run: make test-cover
       - name: Upload codecov report
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2.1.0
         with:
           flags: ${{matrix.envs}}
           file: coverage.txt
