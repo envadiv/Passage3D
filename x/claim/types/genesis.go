@@ -26,6 +26,10 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	totalClaimable := sdk.Coins{}
 
+	if err := gs.Params.Validate(); err != nil {
+		return err
+	}
+
 	for _, claimRecord := range gs.ClaimRecords {
 		totalClaimable = totalClaimable.Add(claimRecord.InitialClaimableAmount...)
 	}
