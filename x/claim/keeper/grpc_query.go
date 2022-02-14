@@ -11,6 +11,11 @@ import (
 	"github.com/envadiv/Passage3D/x/claim/types"
 )
 
+// Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
+type Querier struct {
+	Keeper
+}
+
 var _ types.QueryServer = Keeper{}
 
 // ModuleAccountBalance returns claim module account balance.

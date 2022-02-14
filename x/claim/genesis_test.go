@@ -97,7 +97,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	encodingConfig := simapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	am := claim.NewAppModule(appCodec, app.ClaimKeeper)
 

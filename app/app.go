@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	appparams "github.com/envadiv/Passage3D/app/params"
 	"io"
 	"net/http"
 	"os"
@@ -27,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -217,7 +217,7 @@ func init() {
 // NewPassageApp returns a reference to an initialized PassageApp.
 func NewPassageApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig simappparams.EncodingConfig,
+	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *PassageApp {
 
