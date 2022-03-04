@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -114,19 +113,19 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, addr sdk.AccAddress) (types.Clai
 }
 
 // GetClaimableAmountForAction returns claimable amount for a specific action done by an address
-func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action) (sdk.Coins, error) {
+func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress, action int32) (sdk.Coin, error) {
 	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
-		return nil, err
+		return sdk.Coin{}, err
 	}
 
 	if claimRecord.Address == "" {
-		return sdk.Coins{}, nil
+		return sdk.Coin{}, nil
 	}
 
 	// if action already completed, nothing is claimable
 	if claimRecord.ActionCompleted[action] {
-		return sdk.Coins{}, nil
+		return sdk.Coin{}, nil
 	}
 
 	params := k.GetParams(ctx)
@@ -134,28 +133,22 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 	// If we are before the start time, do nothing.
 	// This case _shouldn't_ occur on chain, since the
 	// start time ought to be chain start time.
-	if ctx.BlockTime().Before(params.AirdropStartTime) {
-		return sdk.Coins{}, nil
-	}
+	// TODO (gsk967): need to show claims to user before airdrop start
+	//if ctx.BlockTime().Before(params.AirdropStartTime) {
+	//	return sdk.Coin{}, nil
+	//}
 
-	InitialClaimablePerAction := sdk.Coins{}
-	for _, coin := range claimRecord.InitialClaimableAmount {
-		InitialClaimablePerAction = InitialClaimablePerAction.Add(
-			sdk.NewCoin(coin.Denom,
-				coin.Amount.QuoRaw(int64(len(types.Action_name))),
-			),
-		)
-	}
+	claimablePerAction := claimRecord.ClaimableAmount[action]
 
 	elapsedAirdropTime := ctx.BlockTime().Sub(params.AirdropStartTime)
-	// Are we early enough in the airdrop s.t. theres no decay?
+	// Are we early enough in the airdrop s.t. there's no decay?
 	if elapsedAirdropTime <= params.DurationUntilDecay {
-		return InitialClaimablePerAction, nil
+		return claimablePerAction, nil
 	}
 
 	// The entire airdrop has completed
 	if elapsedAirdropTime > params.DurationUntilDecay+params.DurationOfDecay {
-		return sdk.Coins{}, nil
+		return sdk.Coin{}, nil
 	}
 
 	// Positive, since goneTime > params.DurationUntilDecay
@@ -163,17 +156,14 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 	decayPercent := sdk.NewDec(decayTime.Nanoseconds()).QuoInt64(params.DurationOfDecay.Nanoseconds())
 	claimablePercent := sdk.OneDec().Sub(decayPercent)
 
-	claimableCoins := sdk.Coins{}
-	for _, coin := range InitialClaimablePerAction {
-		claimableCoins = claimableCoins.Add(sdk.NewCoin(coin.Denom, coin.Amount.ToDec().Mul(claimablePercent).RoundInt()))
-	}
-
-	return claimableCoins, nil
+	claimablePerAction = sdk.NewCoin(claimablePerAction.Denom, claimablePerAction.Amount.ToDec().Mul(claimablePercent).RoundInt())
+	return claimablePerAction, nil
 }
 
 // GetUserTotalClaimable returns total claimable amount of an address
 func (k Keeper) GetUserTotalClaimable(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error) {
 	claimRecord, err := k.GetClaimRecord(ctx, addr)
+
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -184,20 +174,22 @@ func (k Keeper) GetUserTotalClaimable(ctx sdk.Context, addr sdk.AccAddress) (sdk
 	totalClaimable := sdk.Coins{}
 
 	for action := range types.Action_name {
-		claimableForAction, err := k.GetClaimableAmountForAction(ctx, addr, types.Action(action))
+		claimableForAction, err := k.GetClaimableAmountForAction(ctx, addr, action)
 		if err != nil {
 			return sdk.Coins{}, err
 		}
-		totalClaimable = totalClaimable.Add(claimableForAction...)
+		if !claimableForAction.IsNil() {
+			totalClaimable = totalClaimable.Add(claimableForAction)
+		}
 	}
 	return totalClaimable, nil
 }
 
 // ClaimCoinsForAction remove claimable amount entry and transfer it to user's account
-func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action) (sdk.Coins, error) {
+func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action int32) (sdk.Coin, error) {
 	params := k.GetParams(ctx)
 	if !params.IsAirdropEnabled(ctx.BlockTime()) {
-		return sdk.Coins{}, types.ErrAirdropNotEnabled
+		return sdk.Coin{}, types.ErrAirdropNotEnabled
 	}
 
 	claimableAmount, err := k.GetClaimableAmountForAction(ctx, addr, action)
@@ -205,18 +197,18 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 		return claimableAmount, err
 	}
 
-	if claimableAmount.Empty() {
+	if claimableAmount.IsNil() {
 		return claimableAmount, nil
 	}
 
 	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
-		return nil, err
+		return sdk.Coin{}, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimableAmount)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(claimableAmount))
 	if err != nil {
-		return nil, err
+		return sdk.Coin{}, err
 	}
 
 	claimRecord.ActionCompleted[action] = true
@@ -230,6 +222,7 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 		sdk.NewEvent(
 			types.EventTypeClaim,
 			sdk.NewAttribute(sdk.AttributeKeySender, addr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAction, types.Action_name[action]),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, claimableAmount.String()),
 		),
 	})
@@ -237,8 +230,8 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 	return claimableAmount, nil
 }
 
-// FundRemainingsToCommunity fund remainings to the community when airdrop period end
-func (k Keeper) fundRemainingsToCommunity(ctx sdk.Context) error {
+// fundRemainingToCommunity fund remaining to the community when airdrop period end
+func (k Keeper) fundRemainingToCommunity(ctx sdk.Context) error {
 	moduleAccAddr := k.GetModuleAccountAddress(ctx)
 	amt := k.GetModuleAccountBalance(ctx)
 	ctx.Logger().Info(fmt.Sprintf(
@@ -247,7 +240,7 @@ func (k Keeper) fundRemainingsToCommunity(ctx sdk.Context) error {
 }
 
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {
-	err := k.fundRemainingsToCommunity(ctx)
+	err := k.fundRemainingToCommunity(ctx)
 	if err != nil {
 		return err
 	}

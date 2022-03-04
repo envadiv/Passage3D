@@ -31,14 +31,14 @@ func (suite *KeeperTestSuite) TestGrpcQueryClaimRecords() {
 
 	claimRecords := []types.ClaimRecord{
 		{
-			Address:                addr1.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(types.DefaultClaimDenom, 100)),
-			ActionCompleted:        []bool{false},
+			Address:         addr1.String(),
+			ClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(types.DefaultClaimDenom, 100)),
+			ActionCompleted: []bool{false},
 		},
 		{
-			Address:                addr2.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(types.DefaultClaimDenom, 200)),
-			ActionCompleted:        []bool{false},
+			Address:         addr2.String(),
+			ClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(types.DefaultClaimDenom, 200)),
+			ActionCompleted: []bool{false},
 		},
 	}
 

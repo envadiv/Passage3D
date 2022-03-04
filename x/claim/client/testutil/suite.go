@@ -24,14 +24,14 @@ func init() {
 	addr2 = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	claimRecords = []claimtypes.ClaimRecord{
 		{
-			Address:                addr1.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(claimtypes.DefaultClaimDenom, 10)),
-			ActionCompleted:        []bool{false, false, false, false},
+			Address:         addr1.String(),
+			ClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(claimtypes.DefaultClaimDenom, 10)),
+			ActionCompleted: []bool{false, false, false, false},
 		},
 		{
-			Address:                addr2.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(claimtypes.DefaultClaimDenom, 20)),
-			ActionCompleted:        []bool{false, false, false, false},
+			Address:         addr2.String(),
+			ClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(claimtypes.DefaultClaimDenom, 20)),
+			ActionCompleted: []bool{false, false, false, false},
 		},
 	}
 }
@@ -133,7 +133,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 
 			var result claimtypes.QueryClaimableForActionResponse
 			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-			s.Require().Equal(result.Coins.String(), tc.coins.String())
+			s.Require().Equal(result.Amount.String(), tc.coins.String())
 		})
 	}
 }

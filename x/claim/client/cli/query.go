@@ -134,10 +134,9 @@ func GetCmdQueryClaimableForAction() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Query an address' claimable amount for a specific action",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query an address' claimable amount for a specific action
-
+			fmt.Sprintf(`Query an address' claimable amount for a specific action (ActionInitialClaim, ActionDelegateStake,ActionForRemainingAirdrop)
 Example:
-$ %s query claim claimable-for-action osmo1ey69r37gfxvxg62sh4r0ktpuc46pzjrm23kcrx ActionAddLiquidity
+$ %s query claim claimable-for-action pasg1wuanjx7l4mjdm48p5uqarukm3aus508wxmhljt ActionInitialClaim
 `,
 				version.AppName,
 			),

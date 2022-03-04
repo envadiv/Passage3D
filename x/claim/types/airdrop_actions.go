@@ -1,17 +1,25 @@
 package types
 
-type Action int32
-
 const (
+	// ActionInitialClaim defines a  initial claim actions for airdrop.
+	ActionInitialClaim int32 = 0
 	// ActionDelegateStake defines a delegate stake actions for airdrop.
-	ActionDelegateStake Action = 0
-	// TODO: We need to add more actions
+	ActionDelegateStake int32 = 1
+	// ActionForRemainingAirdrop defines the action for remaining tokens
+	ActionForRemainingAirdrop int32 = 2
+
+	// DelegateActionStake defines Delegate Action Stake
+	DelegateActionStake = "ActionDelegateStake"
 )
 
 var Action_name = map[int32]string{
-	0: "ActionDelegateStake",
+	0: "ActionInitialClaim",
+	1: "ActionDelegateStake",
+	2: "ActionForRemainingAirdrop",
 }
 
 var Action_value = map[string]int32{
-	"ActionDelegateStake": 0,
+	"ActionInitialClaim":        0,
+	"ActionDelegateStake":       1,
+	"ActionForRemainingAirdrop": 2,
 }

@@ -1,6 +1,7 @@
 package types
 
-// claim module event typs
+// claim module event types
 const (
-	EventTypeClaim = "claim"
+	EventTypeClaim         = "claim"
+	AttributeValueCategory = ModuleName
 )

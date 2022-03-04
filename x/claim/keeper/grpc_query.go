@@ -65,10 +65,10 @@ func (k Keeper) ClaimableForAction(goCtx context.Context, req *types.QueryClaima
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid action type: %s", req.Action))
 	}
 
-	coins, err := k.GetClaimableAmountForAction(ctx, addr, types.Action(action))
+	claimableAmountForAction, err := k.GetClaimableAmountForAction(ctx, addr, action)
 
 	return &types.QueryClaimableForActionResponse{
-		Coins: coins,
+		Amount: claimableAmountForAction,
 	}, err
 }
 

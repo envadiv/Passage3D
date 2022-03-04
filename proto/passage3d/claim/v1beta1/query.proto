@@ -81,10 +81,10 @@ message QueryClaimableForActionRequest {
 
 // QueryClaimableForActionResponse is the response type for the Query/ClaimRecord RPC method.
 message QueryClaimableForActionResponse {
-  repeated cosmos.base.v1beta1.Coin coins = 1 [
-    (gogoproto.moretags) = "yaml:\"coins\"",
+  cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
 }
 
