@@ -2,11 +2,12 @@ package app
 
 import (
 	"encoding/json"
-	appparams "github.com/envadiv/Passage3D/app/params"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	appparams "github.com/envadiv/Passage3D/app/params"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -516,7 +517,7 @@ func NewPassageApp(
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 
-	anteHandler, err := ante.NewAnteHandler(
+	anteHandler, err := NewAnteHandler(
 		ante.HandlerOptions{
 			AccountKeeper:   app.AccountKeeper,
 			BankKeeper:      app.BankKeeper,
