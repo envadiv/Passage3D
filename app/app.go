@@ -321,7 +321,8 @@ func NewPassageApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
+			app.ClaimKeeper.Hooks(),
 		),
 	)
 
