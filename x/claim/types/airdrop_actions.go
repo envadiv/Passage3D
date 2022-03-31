@@ -6,7 +6,7 @@ const (
 	// ActionDelegateStake defines a delegate stake actions for airdrop.
 	ActionDelegateStake int32 = 1
 	// ActionForRemainingAirdrop defines the action for remaining tokens
-	ActionForRemainingAirdrop int32 = 2
+	ActionVote int32 = 2
 
 	// DelegateActionStake defines Delegate Action Stake
 	DelegateActionStake = "ActionDelegateStake"
@@ -15,11 +15,11 @@ const (
 var Action_name = map[int32]string{
 	0: "ActionInitialClaim",
 	1: "ActionDelegateStake",
-	2: "ActionForRemainingAirdrop",
+	2: "ActionVote",
 }
 
 var Action_value = map[string]int32{
-	"ActionInitialClaim":        0,
-	"ActionDelegateStake":       1,
-	"ActionForRemainingAirdrop": 2,
+	"ActionInitialClaim":  0,
+	"ActionDelegateStake": 1,
+	"ActionVote":          2,
 }

@@ -2,11 +2,24 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/envadiv/Passage3D/x/claim/types"
 )
 
+func (k Keeper) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
+	_, err := k.ClaimCoinsForAction(ctx, voterAddr, types.ActionVote)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	// must not run on genesis
+	if ctx.BlockHeight() <= 1 {
+		return
+	}
+
 	_, err := k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
 	if err != nil {
 		panic(err.Error())
@@ -20,11 +33,33 @@ type Hooks struct {
 	k Keeper
 }
 
+var _ govtypes.GovHooks = Hooks{}
 var _ stakingtypes.StakingHooks = Hooks{}
 
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
+}
+
+// AfterProposalDeposit implements types.GovHooks
+func (Hooks) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) {
+}
+
+// AfterProposalFailedMinDeposit implements types.GovHooks
+func (Hooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
+}
+
+// AfterProposalSubmission implements types.GovHooks
+func (Hooks) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
+}
+
+// AfterProposalVote implements types.GovHooks
+func (h Hooks) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
+	h.k.AfterProposalVote(ctx, proposalID, voterAddr)
+}
+
+// AfterProposalVotingPeriodEnded implements types.GovHooks
+func (Hooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
 }
 
 // AfterValidatorBeginUnbonding implements types.StakingHooks
