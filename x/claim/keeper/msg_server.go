@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/envadiv/Passage3D/x/claim/types"
 )
@@ -21,18 +22,22 @@ var _ types.MsgServer = msgServer{}
 // Claim sends the claim amount to user based on action type from airdrop
 func (k msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.MsgClaimResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
+
 	params := k.GetParams(ctx)
 	if !params.IsAirdropEnabled(ctx.BlockTime()) {
 		return nil, types.ErrAirdropNotEnabled
 	}
+
 	claimableCoinsForAction, err := k.Keeper.ClaimCoinsForAction(ctx, sender, types.Action_value[msg.ClaimAction])
 	if err != nil {
 		return nil, err
 	}
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -41,6 +46,7 @@ func (k msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.Msg
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
+
 	return &types.MsgClaimResponse{
 		ClaimedAmount: claimableCoinsForAction,
 	}, nil
