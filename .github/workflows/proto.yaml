@@ -3,36 +3,19 @@ name: Protobuf
 # This workflow is only run when a .proto file has been changed
 on:
   pull_request:
-
+    paths:
+      - '**.proto'
 jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@master
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.proto
+      - uses: actions/checkout@v3
       - name: lint
         run: make proto-lint
-        if: env.GIT_DIFF
   breakage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.proto
-      - uses: bufbuild/buf-setup-action@v0.5.0
-      - uses: arduino/setup-protoc@v1
-      - uses: bufbuild/buf-breaking-action@v1
-        with:
-          against: 'https://github.com/${GITHUB_REPOSITORY}.git#branch=main'
-        if: env.GIT_DIFF
-        env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
-          BUF_INPUT_HTTPS_USERNAME: ${{ env.GITHUB_REPOSITORY_OWNER	}}
-          BUF_INPUT_HTTPS_PASSWORD: ${{ secrets.github_token }}
-
+      - uses: actions/checkout@v3
+      - name: check-breakage
+        run: make proto-check-breaking
