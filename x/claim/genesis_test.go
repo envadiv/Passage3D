@@ -1,10 +1,11 @@
 package claim_test
 
 import (
-	"github.com/envadiv/Passage3D/x/claim"
-	"github.com/envadiv/Passage3D/x/claim/types"
 	"testing"
 	"time"
+
+	"github.com/envadiv/Passage3D/x/claim"
+	"github.com/envadiv/Passage3D/x/claim/types"
 
 	simapp "github.com/envadiv/Passage3D/app"
 
@@ -18,7 +19,7 @@ var now = time.Now().UTC()
 var acc1 = sdk.AccAddress("addr1---------------")
 var acc2 = sdk.AccAddress("addr2---------------")
 var testGenesis = types.GenesisState{
-	ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 750000000),
+	ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 1500000000),
 	Params: types.Params{
 		AirdropEnabled:     true,
 		AirdropStartTime:   now,
@@ -31,17 +32,13 @@ var testGenesis = types.GenesisState{
 			Address: acc1.String(),
 			ClaimableAmount: []sdk.Coin{
 				sdk.NewInt64Coin(types.DefaultClaimDenom, 1000000000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1000000000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1000000000),
-			}, ActionCompleted: []bool{true, false, true},
+			}, ActionCompleted: []bool{false},
 		},
 		{
 			Address: acc2.String(),
 			ClaimableAmount: []sdk.Coin{
 				sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000),
-			}, ActionCompleted: []bool{false, false, false},
+			}, ActionCompleted: []bool{false},
 		},
 	},
 }
@@ -73,7 +70,7 @@ func TestClaimExportGenesis(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, claimRecord, testGenesis.ClaimRecords[1])
 
-	claimableAmount, err := app.ClaimKeeper.ClaimCoinsForAction(ctx, acc2, types.ActionDelegateStake)
+	claimableAmount, err := app.ClaimKeeper.ClaimCoinsForAction(ctx, acc2, types.ActionInitialClaim)
 	require.NoError(t, err)
 	require.Equal(t, claimableAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000))
 
@@ -86,10 +83,8 @@ func TestClaimExportGenesis(t *testing.T) {
 			Address: acc2.String(),
 			ClaimableAmount: []sdk.Coin{
 				sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000),
 			},
-			ActionCompleted: []bool{false, true, false},
+			ActionCompleted: []bool{true},
 		},
 	})
 }

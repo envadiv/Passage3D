@@ -1,11 +1,12 @@
 package types
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 // AccAddress returns a sample account address
@@ -31,10 +32,11 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 			name: "valid address",
 			msg: MsgClaim{
 				Sender:      AccAddress(),
-				ClaimAction: DelegateActionStake,
+				ClaimAction: InitialClaim,
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.msg.ValidateBasic()

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
@@ -28,7 +29,7 @@ func GetTxCmd() *cobra.Command {
 func CmdInitialClaim() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "claim [claim_action]",
-		Short: "Claim amount based on action from airdrop, claim action are (ActionInitialClaim,ActionForRemainingAirdrop)",
+		Short: "Claim amount based on action from airdrop, claim action are (ActionInitialClaim)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -40,11 +41,11 @@ func CmdInitialClaim() *cobra.Command {
 				return fmt.Errorf("action type is required")
 			}
 
-			_, ok := types.Action_value[claimAction]
+			v, ok := types.Action_value[claimAction]
 			if !ok {
 				return fmt.Errorf("invalid action type: %s", claimAction)
 			}
-			if claimAction == types.DelegateActionStake {
+			if v != types.ActionInitialClaim {
 				return fmt.Errorf("invalid action type: %s, %s is not allowed", claimAction, claimAction)
 			}
 
