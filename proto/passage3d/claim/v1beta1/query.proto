@@ -1,0 +1,103 @@
+syntax = "proto3";
+package passage3d.claim.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "passage3d/claim/v1beta1/params.proto";
+import "passage3d/claim/v1beta1/claim_record.proto";
+
+option go_package = "github.com/envadiv/passage3d/x/claim/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // ModuleAccountBalance RPC returns the claim module account balance
+  rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest) returns (QueryModuleAccountBalanceResponse) {
+    option (google.api.http).get = "/passage3d/claim/v1beta1/module_account_balance";
+  }
+
+  // Params RPC returns claim module params
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/passage3d/claim/v1beta1/params";
+  }
+
+  // ClaimRecord RPC returns claim record for an address
+  rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
+    option (google.api.http).get = "/passage3d/claim/v1beta1/claim_record/{address}";
+  }
+
+  // ClaimableForAction RPC returns claimable amount for an action of an address
+  rpc ClaimableForAction(QueryClaimableForActionRequest) returns (QueryClaimableForActionResponse) {
+    option (google.api.http).get = "/passage3d/claim/v1beta1/claimable_for_action/{address}/{action}";
+  }
+
+  // TotalClaimable RPC returns total claimable amount for address
+  rpc TotalClaimable(QueryTotalClaimableRequest) returns (QueryTotalClaimableResponse) {
+    option (google.api.http).get = "/passage3d/claim/v1beta1/total_claimable/{address}";
+  }
+
+}
+
+// QueryModuleAccountBalanceRequest is the request type for the Query/ModuleAccountBalance RPC method.
+message QueryModuleAccountBalanceRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryModuleAccountBalanceResponse {
+  // params defines the parameters of the module.
+  repeated cosmos.base.v1beta1.Coin module_account_balance = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryClaimRecordRequest is the request type for the Query/ClaimRecord RPC method.
+message QueryClaimRecordRequest {
+  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+}
+
+// QueryClaimRecordResponse is the response type for the Query/ClaimRecord RPC method.
+message QueryClaimRecordResponse {
+  ClaimRecord claim_record = 1 [
+    (gogoproto.moretags) = "yaml:\"claim_record\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryClaimableForActionRequest is the request type for the Query/ClaimRecord RPC method.
+message QueryClaimableForActionRequest {
+  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+  string action = 2 [(gogoproto.moretags) = "yaml:\"action\""];
+}
+
+// QueryClaimableForActionResponse is the response type for the Query/ClaimRecord RPC method.
+message QueryClaimableForActionResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+// QueryTotalClaimableRequest is the request type for the Query/TotalClaimableRequest RPC method.
+message QueryTotalClaimableRequest {
+  string address = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+}
+
+// QueryTotalClaimableResponse is the response type for the Query/TotalClaimableResponse RPC method.
+message QueryTotalClaimableResponse {
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}

@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -23,6 +22,10 @@ const (
 )
 
 func init() {
+	SetAddressPrefixes()
+}
+
+func SetAddressPrefixes() {
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
@@ -34,5 +37,5 @@ func init() {
 		}
 		return fmt.Errorf("unexpected address length %d", n)
 	})
-	config.Seal()
+	//config.Seal()
 }
