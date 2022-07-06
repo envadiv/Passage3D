@@ -12,7 +12,7 @@ APP = ./passage
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/envadiv/Passage3D.git
 DOCKER := $(shell which docker)
-DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.0.0-rc8
 
 export GO111MODULE = on
 
@@ -384,9 +384,11 @@ devdoc-update:
 
 containerProtoVer=v0.2
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
-containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
+containerProtoGen=passage3d-proto-gen-$(containerProtoVer)
+containerProtoGenSwagger=passage3d-proto-gen-swagger-$(containerProtoVer)
+containerProtoFmt=passage3d-proto-fmt-$(containerProtoVer)
+containerProtoLint=passage3d-proto-lint-$(containerProtoVer)
+containerProtoBreaking=passage3d-proto-break-$(containerProtoVer)
 
 proto-all: proto-format proto-lint proto-gen
 
@@ -412,10 +414,14 @@ proto-format:
 
 
 proto-lint:
-	@$(DOCKER_BUF) lint --error-format=json
+	@echo "Checking Proto-Lint"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoLint}$$"; then docker start -a $(containerProtoLint); else docker run --name $(containerProtoLint)  -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.0.0-rc8 \
+	lint --error-format=json ;	fi
 
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
+	@echo "Checking Proto Breaking "
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoBreaking}$$"; then docker start -a $(containerProtoBreaking); else docker run --name $(containerProtoBreaking)  -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.0.0-rc8 \
+	 breaking --against $(HTTPS_GIT)#branch=main ;	fi
 
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
