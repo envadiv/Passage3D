@@ -3,7 +3,7 @@ go 1.17
 module github.com/envadiv/Passage3D
 
 require (
-	github.com/cosmos/cosmos-sdk v0.45.5
+	github.com/cosmos/cosmos-sdk v0.45.6
 	github.com/cosmos/ibc-go/v2 v2.0.2
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
