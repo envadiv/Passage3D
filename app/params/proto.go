@@ -14,14 +14,15 @@ import (
 // App user should'nt create new codecs - use the app.AppCodec instead.
 // [DEPRECATED]
 func MakeTestEncodingConfig() EncodingConfig {
-	cdc := codec.NewLegacyAmino()
+	amino := codec.NewLegacyAmino()
 	interfaceRegistry := types.NewInterfaceRegistry()
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	codec := codec.NewProtoCodec(interfaceRegistry)
+	txCfg := tx.NewTxConfig(codec, tx.DefaultSignModes)
 
 	return EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
-		Marshaler:         marshaler,
-		TxConfig:          tx.NewTxConfig(marshaler, tx.DefaultSignModes),
-		Amino:             cdc,
+		Codec:             codec,
+		TxConfig:          txCfg,
+		Amino:             amino,
 	}
 }

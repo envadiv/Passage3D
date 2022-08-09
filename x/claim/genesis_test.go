@@ -44,7 +44,7 @@ var testGenesis = types.GenesisState{
 }
 
 func TestClaimInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -60,7 +60,7 @@ func TestClaimInitGenesis(t *testing.T) {
 }
 
 func TestClaimExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -90,12 +90,12 @@ func TestClaimExportGenesis(t *testing.T) {
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	encodingConfig := simapp.MakeEncodingConfig()
-	appCodec := encodingConfig.Marshaler
+	appCodec := encodingConfig.Codec
 	am := claim.NewAppModule(appCodec, app.ClaimKeeper)
 
 	genesis := testGenesis
@@ -103,7 +103,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
-		app := simapp.Setup(false)
+		app := simapp.Setup(t, false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := claim.NewAppModule(appCodec, app.ClaimKeeper)

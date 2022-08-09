@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -156,7 +157,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 	decayPercent := sdk.NewDec(decayTime.Nanoseconds()).QuoInt64(params.DurationOfDecay.Nanoseconds())
 	claimablePercent := sdk.OneDec().Sub(decayPercent)
 
-	claimablePerAction = sdk.NewCoin(claimablePerAction.Denom, claimablePerAction.Amount.ToDec().Mul(claimablePercent).RoundInt())
+	claimablePerAction = sdk.NewCoin(claimablePerAction.Denom, claimablePerAction.Amount.Mul(claimablePercent.RoundInt()))
 	return claimablePerAction, nil
 }
 

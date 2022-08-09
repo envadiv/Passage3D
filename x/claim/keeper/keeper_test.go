@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/envadiv/Passage3D/app"
@@ -8,8 +11,6 @@ import (
 	"github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
-	"time"
 )
 
 type KeeperTestSuite struct {
@@ -21,7 +22,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app = app.Setup(false)
+	suite.app = app.Setup(suite.T(), false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "passage3d-1", Time: time.Now()})
 
 	airdropStartTime := time.Now()
