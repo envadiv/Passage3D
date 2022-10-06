@@ -34,14 +34,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v2/modules/core"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v3/modules/core"
+
+	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeEncodingConfig()
 	db := dbm.NewMemDB()
-	app := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.DisableAllProposals, EmptyAppOptions{}, nil)
 
 	for acc := range maccPerms {
 		require.True(
@@ -65,7 +67,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app2 := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.DisableAllProposals, EmptyAppOptions{}, nil)
 	_, err = app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
@@ -79,7 +81,7 @@ func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.DisableAllProposals, EmptyAppOptions{}, nil)
 
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
@@ -188,6 +190,7 @@ func TestRunMigrations(t *testing.T) {
 					"ibc":          ibc.AppModule{}.ConsensusVersion(),
 					"transfer":     transfer.AppModule{}.ConsensusVersion(),
 					"claim":        claim.AppModule{}.ConsensusVersion(),
+					"wasm":         wasm.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
@@ -205,7 +208,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.DisableAllProposals, EmptyAppOptions{}, nil)
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
@@ -248,7 +251,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeEncodingConfig()
 	db := dbm.NewMemDB()
-	app := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.DisableAllProposals, EmptyAppOptions{}, nil)
 	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)

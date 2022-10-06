@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	appparams "github.com/envadiv/Passage3D/app/params"
 	"io"
 	"os"
 	"path/filepath"
@@ -32,11 +31,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/envadiv/Passage3D/app"
+
+	wasmappparams "github.com/CosmWasm/wasmd/app/params"
+	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
+func NewRootCmd() (*cobra.Command, wasmappparams.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -137,7 +139,7 @@ lru_size = 0`
 	return customAppTemplate, customAppConfig
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig wasmappparams.EncodingConfig) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -224,7 +226,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg appparams.EncodingConfig
+	encCfg wasmappparams.EncodingConfig
 }
 
 // newApp is an appCreator
@@ -260,7 +262,9 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
+		wasm.DisableAllProposals,
 		appOpts,
+		nil,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -288,13 +292,13 @@ func (a appCreator) appExport(
 	}
 
 	if height != -1 {
-		simApp = app.NewPassageApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		simApp = app.NewPassageApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, wasm.DisableAllProposals, appOpts, nil)
 
 		if err := simApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = app.NewPassageApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, appOpts)
+		simApp = app.NewPassageApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, wasm.DisableAllProposals, appOpts, nil)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)

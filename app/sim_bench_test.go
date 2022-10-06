@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 // Profile with:
@@ -33,7 +35,8 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+	encCfg := MakeEncodingConfig()
+	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, encCfg, wasm.DisableAllProposals, EmptyAppOptions{}, nil, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -83,7 +86,8 @@ func BenchmarkInvariants(b *testing.B) {
 		}
 	}()
 
-	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, MakeEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+	encCfg := MakeEncodingConfig()
+	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, simapp.FlagPeriodValue, encCfg, wasm.DisableAllProposals, EmptyAppOptions{}, nil, interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
