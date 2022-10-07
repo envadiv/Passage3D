@@ -148,7 +148,7 @@ $ %s query claim claimable-for-action pasg1wuanjx7l4mjdm48p5uqarukm3aus508wxmhlj
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			_, ok := types.Action_value[args[1]]
+			_, ok := types.ActionValue[args[1]]
 			if !ok {
 				return fmt.Errorf("invalid action type: %s", args[1])
 			}

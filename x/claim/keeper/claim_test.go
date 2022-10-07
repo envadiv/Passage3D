@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	// get completed activities
 	claimRecord, err := suite.app.ClaimKeeper.GetClaimRecord(suite.ctx, addr1)
 	suite.Require().NoError(err)
-	for i := range types.Action_name {
+	for i := range types.ActionName {
 		suite.Require().False(claimRecord.ActionCompleted[i])
 	}
 

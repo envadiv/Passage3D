@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -114,7 +115,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 			"query claimable-for-action amount",
 			[]string{
 				addr2.String(),
-				claimtypes.Action_name[0],
+				claimtypes.ActionName[0],
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			sdk.Coins{sdk.NewCoin(claimtypes.DefaultClaimDenom, sdk.NewInt(20))},

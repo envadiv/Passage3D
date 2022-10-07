@@ -2,6 +2,7 @@ package network
 
 import (
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/server/api"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -11,6 +12,9 @@ import (
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 
+	"path/filepath"
+	"time"
+
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -18,8 +22,6 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
-	"path/filepath"
-	"time"
 )
 
 func startInProcess(cfg Config, val *Validator) error {
@@ -193,7 +195,7 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
+	writePath := dir
 	file := filepath.Join(writePath, name)
 
 	err := tmos.EnsureDir(writePath, 0755)

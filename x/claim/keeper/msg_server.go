@@ -33,7 +33,7 @@ func (k msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.Msg
 		return nil, types.ErrAirdropNotEnabled
 	}
 
-	claimableCoinsForAction, err := k.Keeper.ClaimCoinsForAction(ctx, sender, types.Action_value[msg.ClaimAction])
+	claimableCoinsForAction, err := k.Keeper.ClaimCoinsForAction(ctx, sender, types.ActionValue[msg.ClaimAction])
 	if err != nil {
 		return nil, err
 	}

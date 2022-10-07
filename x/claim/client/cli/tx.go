@@ -41,7 +41,7 @@ func CmdInitialClaim() *cobra.Command {
 				return fmt.Errorf("action type is required")
 			}
 
-			v, ok := types.Action_value[claimAction]
+			v, ok := types.ActionValue[claimAction]
 			if !ok {
 				return fmt.Errorf("invalid action type: %s", claimAction)
 			}

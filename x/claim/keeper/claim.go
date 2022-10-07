@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -134,9 +135,9 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 	// This case _shouldn't_ occur on chain, since the
 	// start time ought to be chain start time.
 	// TODO (gsk967): need to show claims to user before airdrop start
-	//if ctx.BlockTime().Before(params.AirdropStartTime) {
+	// if ctx.BlockTime().Before(params.AirdropStartTime) {
 	//	return sdk.Coin{}, nil
-	//}
+	// }
 
 	claimablePerAction := claimRecord.ClaimableAmount[action]
 
@@ -173,7 +174,7 @@ func (k Keeper) GetUserTotalClaimable(ctx sdk.Context, addr sdk.AccAddress) (sdk
 
 	totalClaimable := sdk.Coins{}
 
-	for action := range types.Action_name {
+	for action := range types.ActionName {
 		claimableForAction, err := k.GetClaimableAmountForAction(ctx, addr, action)
 		if err != nil {
 			return sdk.Coins{}, err
@@ -222,7 +223,7 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 		sdk.NewEvent(
 			types.EventTypeClaim,
 			sdk.NewAttribute(sdk.AttributeKeySender, addr.String()),
-			sdk.NewAttribute(sdk.AttributeKeyAction, types.Action_name[action]),
+			sdk.NewAttribute(sdk.AttributeKeyAction, types.ActionName[action]),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, claimableAmount.String()),
 		),
 	})

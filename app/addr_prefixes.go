@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -37,5 +38,4 @@ func SetAddressPrefixes() {
 		}
 		return fmt.Errorf("unexpected address length %d", n)
 	})
-	//config.Seal()
 }
