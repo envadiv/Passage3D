@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"errors"
-	appparams "github.com/envadiv/Passage3D/app/params"
 	"io"
 	"os"
 	"path/filepath"
+
+	appparams "github.com/envadiv/Passage3D/app/params"
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/spf13/cast"
@@ -117,6 +118,7 @@ func initAppConfig() (string, interface{}) {
 	//
 	// In simapp, we set the min gas prices to 0.
 	srvCfg.MinGasPrices = "0upasg"
+	srvCfg.IAVLDisableFastNode = false
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
@@ -272,6 +274,8 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		baseapp.SetSnapshotStore(snapshotStore),
 		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
 		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagIAVLFastNode))),
 	)
 }
 
@@ -279,8 +283,8 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 // and exports state.
 func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-
+	appOpts servertypes.AppOptions,
+) (servertypes.ExportedApp, error) {
 	var simApp *app.PassageApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {

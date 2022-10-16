@@ -2,6 +2,9 @@ package network
 
 import (
 	"encoding/json"
+	"path/filepath"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/server/api"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -18,8 +21,6 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
-	"path/filepath"
-	"time"
 )
 
 func startInProcess(cfg Config, val *Validator) error {
@@ -151,7 +152,6 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 }
 
 func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance, genFiles []string) error {
-
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[authtypes.ModuleName], &authGenState)
@@ -193,15 +193,15 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
+	writePath := filepath.Join(dir) //nolint:gocritic
 	file := filepath.Join(writePath, name)
 
-	err := tmos.EnsureDir(writePath, 0755)
+	err := tmos.EnsureDir(writePath, 0o755)
 	if err != nil {
 		return err
 	}
 
-	err = tmos.WriteFile(file, contents, 0644)
+	err = tmos.WriteFile(file, contents, 0o644)
 	if err != nil {
 		return err
 	}

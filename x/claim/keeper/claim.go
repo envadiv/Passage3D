@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -134,7 +135,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 	// This case _shouldn't_ occur on chain, since the
 	// start time ought to be chain start time.
 	// TODO (gsk967): need to show claims to user before airdrop start
-	//if ctx.BlockTime().Before(params.AirdropStartTime) {
+	// if ctx.BlockTime().Before(params.AirdropStartTime) {
 	//	return sdk.Coin{}, nil
 	//}
 

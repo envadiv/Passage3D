@@ -7,10 +7,10 @@ const (
 	InitialClaim = "ActionInitialClaim"
 )
 
-var Action_name = map[int32]string{
+var Action_name = map[int32]string{ //nolint:revive
 	0: "ActionInitialClaim",
 }
 
-var Action_value = map[string]int32{
+var Action_value = map[string]int32{ //nolint:revive
 	"ActionInitialClaim": 0,
 }

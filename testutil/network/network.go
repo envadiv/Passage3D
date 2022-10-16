@@ -6,6 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -36,14 +44,6 @@ import (
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"os"
-	"path/filepath"
-	"sync"
-	"testing"
-	"time"
 )
 
 // package-wide network lock to only allow one test network at a time
@@ -172,7 +172,7 @@ func New(t *testing.T, cfg Config) *Network {
 	t.Log("acquiring test network lock")
 	lock.Lock()
 
-	baseDir, err := ioutil.TempDir(t.TempDir(), cfg.ChainID)
+	baseDir, err := os.MkdirTemp(t.TempDir(), cfg.ChainID)
 	require.NoError(t, err)
 	t.Logf("created temporary directory: %s", baseDir)
 
@@ -253,8 +253,8 @@ func New(t *testing.T, cfg Config) *Network {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		require.NoError(t, os.MkdirAll(filepath.Join(nodeDir, "config"), 0755))
-		require.NoError(t, os.MkdirAll(clientDir, 0755))
+		require.NoError(t, os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755))
+		require.NoError(t, os.MkdirAll(clientDir, 0o755))
 
 		tmCfg.SetRoot(nodeDir)
 		tmCfg.Moniker = nodeDirName

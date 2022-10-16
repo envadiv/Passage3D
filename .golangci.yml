@@ -7,7 +7,6 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - errcheck
@@ -26,7 +25,6 @@ linters:
     - prealloc
     - revive
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
