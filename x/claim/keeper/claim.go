@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+
+	"github.com/envadiv/Passage3D/x/claim/types"
+	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/envadiv/Passage3D/x/claim/types"
-	"github.com/gogo/protobuf/proto"
 )
 
 // GetModuleAccountAddress gets module account address of claim module
@@ -129,14 +131,6 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 	}
 
 	params := k.GetParams(ctx)
-
-	// If we are before the start time, do nothing.
-	// This case _shouldn't_ occur on chain, since the
-	// start time ought to be chain start time.
-	// TODO (gsk967): need to show claims to user before airdrop start
-	//if ctx.BlockTime().Before(params.AirdropStartTime) {
-	//	return sdk.Coin{}, nil
-	//}
 
 	claimablePerAction := claimRecord.ClaimableAmount[action]
 

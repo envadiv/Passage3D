@@ -2,15 +2,17 @@ package testutil
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/envadiv/Passage3D/app"
 	"github.com/envadiv/Passage3D/testutil/network"
 	"github.com/envadiv/Passage3D/x/claim/client/cli"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var addr1 sdk.AccAddress

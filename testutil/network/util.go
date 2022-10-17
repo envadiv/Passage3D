@@ -2,24 +2,28 @@ package network
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/server/api"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 
-	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/cosmos/cosmos-sdk/server/api"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
+
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
-	"path/filepath"
-	"time"
+
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 func startInProcess(cfg Config, val *Validator) error {
@@ -193,16 +197,13 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
-	file := filepath.Join(writePath, name)
+	file := filepath.Join(dir, name)
 
-	err := tmos.EnsureDir(writePath, 0755)
-	if err != nil {
-		return err
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	err = tmos.WriteFile(file, contents, 0644)
-	if err != nil {
+	if err := os.WriteFile(file, contents, 0o644); err != nil { //nolint: gosec
 		return err
 	}
 

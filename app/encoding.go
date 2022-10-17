@@ -1,8 +1,9 @@
 package app
 
 import (
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/envadiv/Passage3D/app/params"
+
+	"github.com/cosmos/cosmos-sdk/std"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for testing.

@@ -1,9 +1,10 @@
 package testutil
 
 import (
+	"testing"
+
 	"github.com/envadiv/Passage3D/testutil/network"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {

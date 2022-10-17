@@ -9,10 +9,11 @@ import (
 
 	simapp "github.com/envadiv/Passage3D/app"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var now = time.Now().UTC()

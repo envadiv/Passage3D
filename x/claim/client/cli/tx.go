@@ -6,9 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // GetTxCmd returns the transaction commands for this module

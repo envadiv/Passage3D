@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/envadiv/Passage3D/x/claim/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/envadiv/Passage3D/x/claim/types"
 )
 
 func (suite *KeeperTestSuite) TestAirdropFlow() {
