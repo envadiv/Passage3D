@@ -7,10 +7,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -20,7 +21,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	claimQueryCmd.AddCommand(

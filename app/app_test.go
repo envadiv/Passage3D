@@ -2,9 +2,10 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/envadiv/Passage3D/x/claim"
 	"os"
 	"testing"
+
+	"github.com/envadiv/Passage3D/x/claim"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -12,6 +13,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v2/modules/core"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
@@ -34,8 +38,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v2/modules/core"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

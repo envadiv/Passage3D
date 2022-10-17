@@ -6,7 +6,6 @@ import (
 	"time"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"gopkg.in/yaml.v2"
 )
 
 var (

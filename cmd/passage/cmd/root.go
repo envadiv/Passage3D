@@ -2,17 +2,21 @@ package cmd
 
 import (
 	"errors"
-	appparams "github.com/envadiv/Passage3D/app/params"
 	"io"
 	"os"
 	"path/filepath"
 
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	appparams "github.com/envadiv/Passage3D/app/params"
+
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+
+	"github.com/envadiv/Passage3D/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,7 +35,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/envadiv/Passage3D/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -180,7 +183,7 @@ func queryCommand() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	cmd.AddCommand(
@@ -203,7 +206,7 @@ func txCommand() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	cmd.AddCommand(

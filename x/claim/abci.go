@@ -1,9 +1,10 @@
 package claim
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/envadiv/Passage3D/x/claim/keeper"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker is called on every block

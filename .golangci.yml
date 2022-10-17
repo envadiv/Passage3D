@@ -11,7 +11,6 @@ linters:
     - depguard
     - dogsled
     - errcheck
-    - exportloopref
     - goconst
     - gocritic
     - gofmt
@@ -24,7 +23,6 @@ linters:
     - nakedret
     - nolintlint
     - prealloc
-    - revive
     - staticcheck
     - structcheck
     - stylecheck

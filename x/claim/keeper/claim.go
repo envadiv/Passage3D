@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+
+	"github.com/envadiv/Passage3D/x/claim/types"
+	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/envadiv/Passage3D/x/claim/types"
-	"github.com/gogo/protobuf/proto"
 )
 
 // GetModuleAccountAddress gets module account address of claim module
