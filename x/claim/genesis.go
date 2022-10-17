@@ -5,9 +5,10 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/envadiv/Passage3D/x/claim/keeper"
 	"github.com/envadiv/Passage3D/x/claim/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the claim module's state from a provided genesis state.

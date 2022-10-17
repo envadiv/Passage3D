@@ -2,10 +2,12 @@ package keeper_test
 
 import (
 	"context"
+	"time"
+
+	"github.com/envadiv/Passage3D/x/claim/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/envadiv/Passage3D/x/claim/types"
-	"time"
 )
 
 func (suite *KeeperTestSuite) TestGrpcQueryParams() {
