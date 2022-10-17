@@ -132,14 +132,6 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 
 	params := k.GetParams(ctx)
 
-	// If we are before the start time, do nothing.
-	// This case _shouldn't_ occur on chain, since the
-	// start time ought to be chain start time.
-	// TODO (gsk967): need to show claims to user before airdrop start
-	//if ctx.BlockTime().Before(params.AirdropStartTime) {
-	//	return sdk.Coin{}, nil
-	//}
-
 	claimablePerAction := claimRecord.ClaimableAmount[action]
 
 	elapsedAirdropTime := ctx.BlockTime().Sub(params.AirdropStartTime)

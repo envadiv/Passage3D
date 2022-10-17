@@ -19,7 +19,7 @@ func GetTxCmd() *cobra.Command {
 		Short:                      fmt.Sprintf("%s transactions subcommands", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	claimTxCmd.AddCommand(CmdInitialClaim())
