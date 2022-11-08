@@ -105,6 +105,8 @@ import (
 	claimkeeper "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 
+	"github.com/envadiv/Passage3D/wasmbindings"
+
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
@@ -648,6 +650,7 @@ func NewPassageApp(
 			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
 		}
 	}
+	
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
