@@ -305,5 +305,6 @@ func (a appCreator) appExport(
 		simApp = app.NewPassageApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, emptyWasmOpts, appOpts, nil)
 	}
 
+	
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
