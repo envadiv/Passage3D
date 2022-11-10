@@ -1,74 +1,74 @@
 version: "3"
 
 services:
-  simdnode0:
-    container_name: simdnode0
-    image: "cosmossdk/simd-env"
+  passagenode0:
+    container_name: passagenode0
+    image: "ghcr.io/ovrclk/cosmos-omnibus:v0.3.9-passage-v1.1.0"
     ports:
       - "26656-26657:26656-26657"
       - "1317:1317"
       - "9090:9090"
     environment:
+      - CHAIN_ID=mytestnet
+      - MONIKER=passagenode0   
       - ID=0
-      - LOG=${LOG:-simd.log}
     volumes:
-      - ./localnet:/data:Z
+      - ./mytestnet/passagenode0/passage/:/root/.passage:Z
     networks:
       localnet:
-        ipv4_address: 192.168.10.2
-
-  simdnode1:
-    container_name: simdnode1
-    image: "cosmossdk/simd-env"
+        ipv4_address: 192.168.0.2
+  passagenode1:
+    container_name: passagenode1
+    image: "ghcr.io/ovrclk/cosmos-omnibus:v0.3.9-passage-v1.1.0"
     ports:
       - "26666-26667:26656-26657"
       - "1318:1317"
       - "9091:9090"
     environment:
+      - CHAIN_ID=mytestnet
+      - MONIKER=passagenode1   
       - ID=1
-      - LOG=${LOG:-simd.log}
     volumes:
-      - ./localnet:/data:Z
+      - ./mytestnet/passagenode1/passage/:/root/.passage:Z
     networks:
       localnet:
-        ipv4_address: 192.168.10.3
-
-  simdnode2:
-    container_name: simdnode2
-    image: "cosmossdk/simd-env"
+        ipv4_address: 192.168.0.3
+  passagenode2:
+    container_name: passagenode2
+    image: "ghcr.io/ovrclk/cosmos-omnibus:v0.3.9-passage-v1.1.0"
     environment:
+      - CHAIN_ID=mytestnet
+      - MONIKER=passagenode2   
       - ID=2
-      - LOG=${LOG:-simd.log}
     ports:
       - "26676-26677:26656-26657"
       - "1319:1317"
       - "9092:9090"
     volumes:
-      - ./localnet:/data:Z
+      - ./mytestnet/passagenode2/passage/:/root/.passage:Z
     networks:
       localnet:
-        ipv4_address: 192.168.10.4
-
-  simdnode3:
-    container_name: simdnode3
-    image: "cosmossdk/simd-env"
+        ipv4_address: 192.168.0.4
+  passagenode3:
+    container_name: passagenode3
+    image: "ghcr.io/ovrclk/cosmos-omnibus:v0.3.9-passage-v1.1.0"
     environment:
+      - CHAIN_ID=mytestnet
+      - MONIKER=passagenode3   
       - ID=3
-      - LOG=${LOG:-simd.log}
     ports:
       - "26686-26687:26656-26657"
       - "1320:1317"
       - "9093:9090"
     volumes:
-      - ./localnet:/data:Z
+      - ./mytestnet/passagenode3/passage/:/root/.passage:Z
     networks:
       localnet:
-        ipv4_address: 192.168.10.5
-
+        ipv4_address: 192.168.0.5
 networks:
   localnet:
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 192.168.10.0/16
+        - subnet: 192.168.0.0/16
