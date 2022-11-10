@@ -33,6 +33,8 @@ import (
 	"github.com/envadiv/Passage3D/app"
 
 	wasmappparams "github.com/CosmWasm/wasmd/app/params"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
@@ -150,6 +152,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig wasmappparams.EncodingCo
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
+		AddGenesisWasmMsgCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -262,7 +265,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
-		wasm.DisableAllProposals,
+		wasmOpts,
 		appOpts,
 		nil,
 		baseapp.SetPruning(pruningOpts),
@@ -287,6 +290,7 @@ func (a appCreator) appExport(
 
 	var simApp *app.PassageApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
+	var emptyWasmOpts []wasm.Option
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
@@ -298,7 +302,7 @@ func (a appCreator) appExport(
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = app.NewPassageApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, wasm.DisableAllProposals, appOpts, nil)
+		simApp = app.NewPassageApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, emptyWasmOpts, appOpts, nil)
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
