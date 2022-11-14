@@ -26,6 +26,7 @@ require (
 	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
+	wasmbindings v1.0.0
 )
 
 require (
@@ -136,8 +137,8 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
-replace github.com/envadiv/Passage3D/wasmbindings => ./wasmbindings
-
+// replace github.com/envadiv/Passage3D/wasmbindings => ./wasmbindings
+replace wasmbindings v1.0.0 ../wasmbindings
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0

@@ -105,7 +105,7 @@ import (
 	claimkeeper "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 
-	"github.com/envadiv/Passage3D/wasmbindings"
+	"wasmbindings"
 
 	cosmwasm "github.com/CosmWasm/wasmvm"	
 	// unnamed import of statik for swagger UI support

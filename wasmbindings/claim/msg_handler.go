@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/envadiv/Passage3D/wasmbindings/claim/types"
+	"wasmbindings/claims/types"
 	claimTypes "github.com/envadiv/Passage3D/x/claim/types"
 )
 
@@ -48,10 +48,13 @@ func (h MsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, co
 
 // updateContractMetadata updates the contract metadata.
 func (h MsgHandler) claimCoins(ctx sdk.Context, contractAddr sdk.AccAddress, req types.ClaimRequest) ([]sdk.Event, [][]byte, error) {
-	if err := h.claimsKeeper.ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, req.Action); err != nil {
-		return nil, nil, err
+
+	var claimable sdk.Coins
+
+	if req.Action != nil {
+		claimable, err = h.claimsKeeper.ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, req.Action)
 	}
 
-	return nil, nil, nil
+	return nil, nil, err
 }
 
