@@ -431,7 +431,7 @@ func NewPassageApp(
 
 	wasmOpts = append(wasmOpts, wasmdKeeper.WithWasmEngine(trackingWasmVm), wasmdKeeper.WithGasRegister(defaultGasRegister))
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
-	wasmOpts = append(wasmOpts, wasmbinding.BuildWasmOptions(&app.ClaimKeeper)...)
+	wasmOpts = append(wasmOpts, wasmbindings.BuildWasmOptions(&app.ClaimKeeper)...)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
