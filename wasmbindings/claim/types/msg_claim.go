@@ -20,7 +20,7 @@ type ClaimRequest struct {
 // ClaimResponse is the Msg.Claim response.
 type ClaimResponse struct {
 	// RecordsNum is the number of ClaimRecord objects processed by the request.
-	Claimable uint64 `json:"claimable"`
+	Claimable wasmVmTypes.Coins `json:"claimable"`
 	
 }
 
@@ -34,8 +34,8 @@ func (r ClaimRequest) Validate() error {
 }
 
 // NewClaimResponse creates a new ClaimResponse.
-func NewClaimResponse(recordsUsed int) ClaimResponse {
+func NewClaimResponse(claimable sdk.Coins) ClaimResponse {
 	return ClaimResponse{
-		RecordsNum:   uint64(recordsUsed),
+		Claimable:   wasmdTypes.NewWasmCoins(claimable)
 	}
 }
