@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"wasmbindings/claims/types"
+	"github.com/envadiv/Passage3D/wasmbindings/claims/types"
 	claimTypes "github.com/envadiv/Passage3D/x/claim/types"
 )
 
