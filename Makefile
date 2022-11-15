@@ -11,7 +11,8 @@ LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 USER ?= ubuntu
-TESTNETDIR ?= $(CURDIR)/mytestnet
+TESTNETCHAINID ?= mytestnet
+TESTNETDIR ?= $(CURDIR)/$(TESTNETCHAINID)
 APP = ./passage
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/envadiv/Passage3D.git
@@ -496,7 +497,7 @@ localnet-start: localnet-stop $(TESTNETDIR)
 
 $(TESTNETDIR): build-linux
 	$(BUILDDIR)/passage testnet \
-		--chain-id $(TESTNETDIR)  \
+		--chain-id $(TESTNETCHAINID)  \
 		--keyring-backend test \
 		--node-dir-prefix passagenode \
 		--node-daemon-home passage \
