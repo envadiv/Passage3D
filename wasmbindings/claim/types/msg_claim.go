@@ -10,10 +10,7 @@ import (
 
 // ClaimRequest is the Msg.Claim request.
 type ClaimRequest struct {
-	
-	// Only one of (RecordsLimit, RecordIDs) should be set.
 	Sender string `json:"sender_address"`
-	// RecordIDs defines specific ClaimRecord object IDs to process.
 	Action string `json:"action"`
 }
 
@@ -27,7 +24,7 @@ type ClaimResponse struct {
 // Validate performs request fields validation.
 func (r ClaimRequest) Validate() error {
 	if (r.Sender == nil && r.Action == nil) {
-		return fmt.Errorf("one of (RecordsLimit, RecordIDs) fields must be set")
+		return fmt.Errorf("one of fields must be set")
 	}
 
 	return nil
