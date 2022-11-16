@@ -17,7 +17,7 @@ type ClaimRequest struct {
 // ClaimResponse is the Msg.Claim response.
 type ClaimResponse struct {
 	// RecordsNum is the number of ClaimRecord objects processed by the request.
-	Claimable wasmVmTypes.Coins `json:"claimable"`
+	Claimable wasmVmTypes.Coin `json:"claimable"`
 	
 }
 
