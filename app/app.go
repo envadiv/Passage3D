@@ -424,11 +424,8 @@ func NewPassageApp(
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
 	supportedFeatures := "iterator,staking,stargate"
-	, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
-	if err != nil {
-		panic(err)
-	}
-
+	cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
+	
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
 	wasmOpts = append(wasmOpts, wasmbindings.BuildWasmOptions(&app.ClaimKeeper)...)
 
