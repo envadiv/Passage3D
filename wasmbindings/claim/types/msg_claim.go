@@ -11,7 +11,7 @@ import (
 // ClaimRequest is the Msg.Claim request.
 type ClaimRequest struct {
 	Sender string `json:"sender_address"`
-	Action int64 `json:"action"`
+	Action int32 `json:"action"`
 }
 
 // ClaimResponse is the Msg.Claim response.
