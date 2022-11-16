@@ -52,7 +52,7 @@ func (h MsgHandler) claimCoins(ctx sdk.Context, contractAddr sdk.AccAddress, req
 
 	claimable, err := h.claimsKeeper.ClaimCoinsForAction(ctx, contractAddr, req.Action)
 
-	aCl[0] := claimable
+	aCl = append(aCl, claimable)
 
 	resCl, err := json.Marshal(types.NewClaimResponse(aCl))
 	if err != nil {
