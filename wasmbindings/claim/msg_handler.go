@@ -42,7 +42,7 @@ func (h MsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, co
 	case msg.ClaimDrop != nil:
 		return h.claimCoins(ctx, contractAddr, *msg.ClaimDrop)
 	default:
-		return nil, nil, sdkErrors.Wrap("x/claim: unknown operation")
+		return nil, nil, sdkErrors.Wrap(fmt.Sprintf("x/claim: unknown operation"))
 	}
 }
 
