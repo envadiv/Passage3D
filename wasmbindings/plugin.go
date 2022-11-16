@@ -16,7 +16,7 @@ type ClaimKeeperExpected interface {
 func BuildWasmOptions(rKeeper ClaimKeeperExpected) []wasmKeeper.Option {
 	return []wasmKeeper.Option{
 		wasmKeeper.WithMessageHandlerDecorator(BuildWasmMsgDecorator(rKeeper)),
-		wasmKeeper.WithQueryPlugins(BuildWasmQueryPlugin(rKeeper)),
+		// wasmKeeper.WithQueryPlugins(BuildWasmQueryPlugin(rKeeper)),
 	}
 }
 
