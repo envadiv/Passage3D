@@ -48,10 +48,13 @@ func (h MsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, co
 
 // updateContractMetadata updates the contract metadata.
 func (h MsgHandler) claimCoins(ctx sdk.Context, contractAddr sdk.AccAddress, req types.ClaimRequest) ([]sdk.Event, [][]byte, error) {
-	
+	var aCl sdk.Coins
+
 	claimable, err := h.claimsKeeper.ClaimCoinsForAction(ctx, contractAddr, req.Action)
 
-	resCl, err := json.Marshal(types.NewClaimResponse(claimable))
+	aCl.append(claimable)
+
+	resCl, err := json.Marshal(types.NewClaimResponse(aCl))
 	if err != nil {
 		return nil, nil, fmt.Errorf("result JSON marshal: %w", err)
 	}
