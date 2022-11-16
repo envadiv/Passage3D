@@ -11,7 +11,7 @@ import (
 // ClaimRequest is the Msg.Claim request.
 type ClaimRequest struct {
 	Sender string `json:"sender_address"`
-	Action string `json:"action"`
+	Action int64 `json:"action"`
 }
 
 // ClaimResponse is the Msg.Claim response.
@@ -23,7 +23,7 @@ type ClaimResponse struct {
 
 // Validate performs request fields validation.
 func (r ClaimRequest) Validate() error {
-	if (r.Sender == "" && r.Action == "") {
+	if (r.Sender == "" && r.Action == nil) {
 		return fmt.Errorf("Fields must be set")
 	}
 
