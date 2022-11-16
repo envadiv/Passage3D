@@ -101,6 +101,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	claimkeeper "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
@@ -421,7 +422,7 @@ func NewPassageApp(
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
-
+	supportedFeatures := "iterator,staking,stargate"
 	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
 	if err != nil {
 		panic(err)
@@ -435,7 +436,7 @@ func NewPassageApp(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate"
+	
 	app.WasmKeeper = wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
