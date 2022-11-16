@@ -228,7 +228,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg wasmappparams.EncodingConfig
+	encCfg params.EncodingConfig
 }
 
 // newApp is an appCreator
@@ -264,6 +264,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
+		app.GetEnabledProposals(),
 		appOpts,
 		nil,
 		baseapp.SetPruning(pruningOpts),
