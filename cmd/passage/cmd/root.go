@@ -293,7 +293,7 @@ func (a appCreator) appExport(
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
-
+	loadLatest := height == -1
 	if height != -1 {
 		simApp = app.NewPassageApp(logger,
 			db,
