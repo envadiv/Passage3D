@@ -9,7 +9,7 @@ import (
 // ClaimKeeperExpected is the expected x/claim keeper.
 type ClaimKeeperExpected interface {
 	claim.KeeperWriterExpected
-	claim.KeeperReaderExpected
+	// claim.KeeperReaderExpected
 }
 
 // BuildWasmOptions returns x/wasmd module options to support WASM bindings functionality.
@@ -31,10 +31,10 @@ func BuildWasmMsgDecorator(rKeeper ClaimKeeperExpected) func(old wasmKeeper.Mess
 }
 
 // BuildWasmQueryPlugin returns the Wasm custom querier plugin.
-func BuildWasmQueryPlugin(rKeeper ClaimKeeperExpected) *wasmKeeper.QueryPlugins {
-	return &wasmKeeper.QueryPlugins{
-		Custom: NewQueryDispatcher(
-			claim.NewQueryHandler(rKeeper),
-		).DispatchQuery,
-	}
-}
+// func BuildWasmQueryPlugin(rKeeper ClaimKeeperExpected) *wasmKeeper.QueryPlugins {
+// 	return &wasmKeeper.QueryPlugins{
+// 		Custom: NewQueryDispatcher(
+// 			claim.NewQueryHandler(rKeeper),
+// 		).DispatchQuery,
+// 	}
+// }
