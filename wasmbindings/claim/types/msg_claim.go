@@ -33,6 +33,6 @@ func (r ClaimRequest) Validate() error {
 // NewClaimResponse creates a new ClaimResponse.
 func NewClaimResponse(claimable sdk.Coins) ClaimResponse {
 	return ClaimResponse{
-		Claimable:   wasmdTypes.NewWasmCoins(claimable)
+		Claimable:   wasmdTypes.NewWasmCoins(claimable),
 	}
 }
