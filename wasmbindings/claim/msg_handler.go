@@ -8,7 +8,7 @@ import (
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/envadiv/Passage3D/wasmbindings/claim/types"
-	claimTypes "github.com/envadiv/Passage3D/x/claim/types"
+	
 )
 
 // KeeperWriterExpected defines the x/claim keeper expected write operations.
