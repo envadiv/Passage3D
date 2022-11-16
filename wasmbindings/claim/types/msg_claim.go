@@ -23,8 +23,8 @@ type ClaimResponse struct {
 
 // Validate performs request fields validation.
 func (r ClaimRequest) Validate() error {
-	if (r.Sender == nil && r.Action == nil) {
-		return fmt.Errorf("one of fields must be set")
+	if (r.Sender == "" && r.Action == "") {
+		return fmt.Errorf("Fields must be set")
 	}
 
 	return nil
