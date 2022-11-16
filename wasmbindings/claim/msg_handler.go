@@ -52,13 +52,8 @@ func (h MsgHandler) claimCoins(ctx sdk.Context, contractAddr sdk.AccAddress, req
 	var claimable sdk.Coins
 	var err error
 
-	if req.Action != 0 {
-		claimable, err := h.claimsKeeper.ClaimCoinsForAction(ctx, contractAddr, req.Action)
-	}
-
-	if err != nil {
-		return nil, nil, err
-	}
+	
+	claimable, err := h.claimsKeeper.ClaimCoinsForAction(ctx, contractAddr, req.Action)
 
 	resCl, err := json.Marshal(types.NewClaimResponse(claimable))
 	if err != nil {
