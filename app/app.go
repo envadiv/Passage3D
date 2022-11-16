@@ -423,18 +423,8 @@ func NewPassageApp(
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
-	supportedFeatures := "iterator,staking,stargate"
-	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
-	if err != nil {
-		panic(err)
-	}
-
-	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
-
-	wasmOpts = append(wasmOpts, wasmkeeper.WithWasmEngine(trackingWasmVm), wasmkeeper.WithGasRegister(defaultGasRegister))
-
-	wasmOpts = append(wasmOpts, wasmbindings.BuildWasmOptions(&app.ClaimKeeper)...)
-
+	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1"
+	
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	
