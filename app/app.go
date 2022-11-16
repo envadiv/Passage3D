@@ -104,7 +104,7 @@ import (
 	
 	claimkeeper "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
-	
+
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
@@ -412,8 +412,6 @@ func NewPassageApp(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
-	defaultGasRegister := wasmkeeper.NewDefaultWasmGasRegister()
-	
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
