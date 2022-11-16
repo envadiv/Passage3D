@@ -34,7 +34,7 @@ func NewClaimMsgHandler(ck KeeperWriterExpected) MsgHandler {
 func (h MsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg types.Msg) ([]sdk.Event, [][]byte, error) {
 	// Validate the input
 	if err := msg.Validate(); err != nil {
-		return nil, nil, sdkErrors.Wrap(claimTypes.ErrInvalidRequest, fmt.Sprintf("x/claim: sub-msg validation: %v", err))
+		return nil, nil, sdkErrors.Wrap(fmt.Sprintf("x/claim: sub-msg validation: %v", err))
 	}
 
 	// Execute operation (one of)
@@ -42,7 +42,7 @@ func (h MsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, co
 	case msg.ClaimDrop != nil:
 		return h.claimCoins(ctx, contractAddr, *msg.ClaimDrop)
 	default:
-		return nil, nil, sdkErrors.Wrap(claimTypes.ErrInvalidRequest, "x/claim: unknown operation")
+		return nil, nil, sdkErrors.Wrap("x/claim: unknown operation")
 	}
 }
 
@@ -50,9 +50,10 @@ func (h MsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, co
 func (h MsgHandler) claimCoins(ctx sdk.Context, contractAddr sdk.AccAddress, req types.ClaimRequest) ([]sdk.Event, [][]byte, error) {
 
 	var claimable sdk.Coins
+	var err error
 
-	if req.Action != nil {
-		claimable, err := h.claimsKeeper.ClaimCoinsForAction(ctx, addr, req.Action)
+	if req.Action != 0 {
+		claimable, err := h.claimsKeeper.ClaimCoinsForAction(ctx, contractAddr, req.Action)
 	}
 
 	if err != nil {
