@@ -101,7 +101,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	// wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	claimkeeper "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
@@ -416,7 +416,7 @@ func NewPassageApp(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
-	// defaultGasRegister := wasmkeeper.NewDefaultWasmGasRegister()
+	defaultGasRegister := wasmkeeper.NewDefaultWasmGasRegister()
 	
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
@@ -424,9 +424,15 @@ func NewPassageApp(
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
 	supportedFeatures := "iterator,staking,stargate"
-	cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
-	
-	// Archway specific options (using a pointer as the keeper is post-initialized below)
+	wasmer, err := cosmwasm.NewVM(filepath.Join(wasmDir, "wasm"), supportedFeatures, 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
+	if err != nil {
+		panic(err)
+	}
+
+	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
+
+	wasmOpts = append(wasmOpts, wasmkeeper.WithWasmEngine(trackingWasmVm), wasmkeeper.WithGasRegister(defaultGasRegister))
+
 	wasmOpts = append(wasmOpts, wasmbindings.BuildWasmOptions(&app.ClaimKeeper)...)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
