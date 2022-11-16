@@ -417,6 +417,7 @@ func NewPassageApp(
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
 	defaultGasRegister := wasmkeeper.NewDefaultWasmGasRegister()
+	
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
@@ -428,9 +429,6 @@ func NewPassageApp(
 		panic(err)
 	}
 
-	trackingWasmVm := wasmdTypes.NewTrackingWasmerEngine(wasmer, &wasmdTypes.NoOpContractGasProcessor{})
-
-	wasmOpts = append(wasmOpts, wasmkeeper.WithWasmEngine(trackingWasmVm), wasmkeeper.WithGasRegister(defaultGasRegister))
 	// Archway specific options (using a pointer as the keeper is post-initialized below)
 	wasmOpts = append(wasmOpts, wasmbindings.BuildWasmOptions(&app.ClaimKeeper)...)
 
