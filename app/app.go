@@ -101,14 +101,10 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmdTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
+	
 	claimkeeper "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
-
-	"github.com/envadiv/Passage3D/wasmbindings"
-
-	cosmwasm "github.com/CosmWasm/wasmvm"	
+	
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
