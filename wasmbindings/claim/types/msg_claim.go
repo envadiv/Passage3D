@@ -31,7 +31,7 @@ func (r ClaimRequest) Validate() error {
 }
 
 // NewClaimResponse creates a new ClaimResponse.
-func NewClaimResponse(claimable sdk.Coins) ClaimResponse {
+func NewClaimResponse(claimable sdk.Coin) ClaimResponse {
 	return ClaimResponse{
 		Claimable:   wasmdTypes.NewWasmCoins(claimable),
 	}
