@@ -59,6 +59,11 @@ func (h MsgHandler) claimCoins(ctx sdk.Context, contractAddr sdk.AccAddress, req
 		return nil, nil, err
 	}
 
-	return nil, [][]byte{claimable}, nil
+	resCl, err := json.Marshal(types.NewClaimResponse(claimable))
+	if err != nil {
+		return nil, nil, fmt.Errorf("result JSON marshal: %w", err)
+	}
+
+	return nil, [][]byte{resCl}, nil
 }
 
