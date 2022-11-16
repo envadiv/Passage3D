@@ -32,14 +32,14 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/envadiv/Passage3D/app"
 
-	wasmappparams "github.com/CosmWasm/wasmd/app/params"
+	params "github.com/envadiv/Passage3D/app/params"
 	
 	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, wasmappparams.EncodingConfig) {
+func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
