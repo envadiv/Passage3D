@@ -15,6 +15,7 @@ require (
 	github.com/tendermint/tendermint v0.34.21
 	github.com/tendermint/tm-db v0.6.6
 	github.com/CosmWasm/wasmd v0.27.0
+	github.com/CosmWasm/wasmvm v1.1.1
 )
 
 require (
