@@ -24,7 +24,7 @@ type MsgHandler struct {
 }
 
 // NewClaimMsgHandler creates a new MsgHandler instance.
-func NewClaimMsgHandler(rk KeeperWriterExpected) MsgHandler {
+func NewClaimMsgHandler(ck KeeperWriterExpected) MsgHandler {
 	return MsgHandler{
 		claimsKeeper: ck,
 	}
