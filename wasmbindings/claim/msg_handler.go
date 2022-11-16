@@ -59,6 +59,6 @@ func (h MsgHandler) claimCoins(ctx sdk.Context, contractAddr sdk.AccAddress, req
 		return nil, nil, err
 	}
 
-	return nil, claimable, nil
+	return nil, [][]byte{claimable}, nil
 }
 
