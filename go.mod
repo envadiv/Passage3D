@@ -14,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tendermint v0.34.21
 	github.com/tendermint/tm-db v0.6.6
-	github.com/CosmWasm/wasmd v0.28.0-osmo-v12
+	github.com/CosmWasm/wasmd v0.27.0
 )
 
 require (
