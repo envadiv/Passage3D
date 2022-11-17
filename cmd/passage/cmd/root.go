@@ -31,7 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/envadiv/Passage3D/app"
-
+	"github.com/prometheus/client_golang/prometheus"
 	params "github.com/envadiv/Passage3D/app/params"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
