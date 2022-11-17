@@ -33,6 +33,9 @@ import (
 	"github.com/envadiv/Passage3D/app"
 
 	params "github.com/envadiv/Passage3D/app/params"
+
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	
 	"github.com/CosmWasm/wasmd/x/wasm"
 )
@@ -216,7 +219,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetMultiSignCommand(),
 		authcmd.GetMultiSignBatchCmd(),
 		authcmd.GetValidateSignaturesCommand(),
-		flags.linebreak,
+		flags.LineBreak,
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
