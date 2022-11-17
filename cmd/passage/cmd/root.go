@@ -216,6 +216,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetMultiSignCommand(),
 		authcmd.GetMultiSignBatchCmd(),
 		authcmd.GetValidateSignaturesCommand(),
+		flags.linebreak,
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
@@ -258,7 +259,10 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 	if err != nil {
 		panic(err)
 	}
-
+	var wasmOpts []wasm.Option
+	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
+		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
+	}
 	return app.NewPassageApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
@@ -266,7 +270,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		a.encCfg,
 		app.GetEnabledProposals(),
 		appOpts,
-		nil,
+		wasmOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
