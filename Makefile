@@ -10,6 +10,9 @@ COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
+USER ?= ubuntu
+TESTNETCHAINID ?= mytestnet
+TESTNETDIR ?= $(CURDIR)/$(TESTNETCHAINID)
 APP = ./passage
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/envadiv/Passage3D.git
@@ -489,13 +492,21 @@ proto-update-deps:
 ###############################################################################
 
 # Run a 4-node testnet locally
-localnet-start: build-linux localnet-stop
-	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' cosmossdk/passage-env 2>/dev/null),$(info found image cosmossdk/passage-env),$(MAKE) -C contrib/images passage-env)
-	$(DOCKER) run --rm -v $(CURDIR)/localnet:/data cosmossdk/passage-env \
-		testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
-	docker-compose up -d
+localnet-start: localnet-stop $(TESTNETDIR)
+	docker-compose up
+
+$(TESTNETDIR): build-linux
+	$(BUILDDIR)/passage testnet \
+		--chain-id $(TESTNETCHAINID)  \
+		--keyring-backend test \
+		--node-dir-prefix passagenode \
+		--node-daemon-home passage \
+		--starting-ip-address 192.168.0.2
 
 localnet-stop:
 	docker-compose down
 
-.PHONY: localnet-start localnet-stop
+localnet-clean:
+	sudo rm -rf $(TESTNETDIR)
+
+.PHONY: localnet-start localnet-stop localnet-clean
