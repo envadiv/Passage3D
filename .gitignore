@@ -9,6 +9,7 @@ artifacts
 coverage.txt
 profile.out
 sim_log_file
+mytestnet
 
 # IDE
 .vscode

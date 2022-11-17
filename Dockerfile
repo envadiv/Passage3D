@@ -1,42 +1,68 @@
-# Simple usage with a mounted data directory:
-# > docker build -t simapp .
-#
-# Server:
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp simapp simd init test-chain
-# TODO: need to set validator in genesis so start runs
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simapp:/root/.simapp simapp simd start
-#
-# Client: (Note the simapp binary always looks at ~/.simapp we can bind to different local storage)
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys add foo
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys list
-# TODO: demo connecting rest-server (or is this in server now?)
-FROM golang:alpine AS build-env
+# syntax=docker/dockerfile:1
 
-# Install minimum necessary dependencies,
-ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
-RUN apk add --no-cache $PACKAGES
+ARG GO_VERSION="1.18"
+ARG RUNNER_IMAGE="gcr.io/distroless/static-debian11"
 
-# Set working directory for the build
-WORKDIR /go/src/github.com/cosmos/cosmos-sdk
+# --------------------------------------------------------
+# Builder
+# --------------------------------------------------------
 
-# Add source files
+FROM golang:${GO_VERSION}-alpine as builder
+
+ARG GIT_VERSION
+ARG GIT_COMMIT
+
+RUN apk add --no-cache \
+    ca-certificates \
+    build-base \
+    linux-headers
+
+# Download go dependencies
+WORKDIR /passage
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/root/go/pkg/mod \
+    go mod download
+
+# Cosmwasm - Download correct libwasmvm version
+RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
+        -O /lib/libwasmvm_muslc.a && \
+    # verify checksum
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
+
+# Copy the remaining files
 COPY . .
 
-# install simapp, remove packages
-RUN make build-linux
+# Build passage binary
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/root/go/pkg/mod \
+    go build \
+        -mod=readonly \
+        -tags "netgo,ledger,muslc" \
+        -ldflags \
+            "-X github.com/cosmos/cosmos-sdk/version.Name="passage" \
+            -X github.com/cosmos/cosmos-sdk/version.AppName="passage" \
+            -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
+            -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
+            -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,ledger,muslc' \
+            -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+        -trimpath \
+        -o /passage/build/passage \
+        /passage/cmd/passage/main.go
 
+# --------------------------------------------------------
+# Runner
+# --------------------------------------------------------
 
-# Final image
-FROM alpine:edge
+FROM ${RUNNER_IMAGE}
 
-# Install ca-certificates
-RUN apk add --update ca-certificates
-WORKDIR /root
+COPY --from=builder /passage/build/passage /bin/passage
 
-# Copy over binaries from the build-env
-COPY --from=build-env /go/src/github.com/cosmos/cosmos-sdk/build/simd /usr/bin/simd
+ENV HOME /passage
+WORKDIR $HOME
 
-EXPOSE 26656 26657 1317 9090
-
-# Run simd by default, omit entrypoint to ease using container with simcli
-CMD ["simd"]
+EXPOSE 26656
+EXPOSE 26657
+EXPOSE 1317
