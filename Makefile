@@ -493,7 +493,7 @@ proto-update-deps:
 
 # Run a 4-node testnet locally
 localnet-start: localnet-stop $(TESTNETDIR)
-	docker-compose up
+	docker-compose up -d
 
 $(TESTNETDIR): build-linux
 	$(BUILDDIR)/passage testnet \
