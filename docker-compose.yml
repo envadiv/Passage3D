@@ -13,7 +13,7 @@ services:
       - "9090:9090"
     volumes:
       - ./mytestnet/passagenode0/passage/:/passage/.passage:Z
-    command: /bin/passage start
+    #command: /bin/passage start
     networks:
       localnet:
         ipv4_address: 192.168.0.2
@@ -29,7 +29,7 @@ services:
       - "9091:9090"
     volumes:
       - ./mytestnet/passagenode1/passage/:/passage/.passage:Z
-    command: /bin/passage start
+    #command: /bin/passage start
     networks:
       localnet:
         ipv4_address: 192.168.0.3
@@ -45,7 +45,7 @@ services:
       - "9092:9090"
     volumes:
       - ./mytestnet/passagenode2/passage/:/passage/.passage:Z
-    command: /bin/passage start
+    #command: /bin/passage start
     networks:
       localnet:
         ipv4_address: 192.168.0.4
@@ -61,7 +61,7 @@ services:
       - "9093:9090"
     volumes:
       - ./mytestnet/passagenode3/passage/:/passage/.passage:Z
-    command: /bin/passage start
+    #command: /bin/passage start
     networks:
       localnet:
         ipv4_address: 192.168.0.5
