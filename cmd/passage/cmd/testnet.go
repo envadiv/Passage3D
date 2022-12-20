@@ -197,7 +197,7 @@ func InitTestnet(
 			return err
 		}
 
-		accTokens := sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction)
+		accTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 		coins := sdk.Coins{
 			sdk.NewCoin("upasgx", accTokens),
 			//sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
