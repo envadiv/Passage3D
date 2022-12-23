@@ -491,17 +491,16 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
-# Run a 4-node testnet locally
-localnet-start: localnet-stop $(TESTNETDIR)
-	docker-compose up
+localnet-keys:
+	. tests/localpassage/scripts/add_keys.sh
 
-$(TESTNETDIR): build-linux
-	$(BUILDDIR)/passage testnet \
-		--chain-id $(TESTNETCHAINID)  \
-		--keyring-backend test \
-		--node-dir-prefix passagenode \
-		--node-daemon-home passage \
-		--starting-ip-address 192.168.0.2
+localnet-init: localnet-clean localnet-build
+
+localnet-build:
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localpassage/docker-compose.yml build
+
+localnet-start:
+	@STATE="" docker-compose -f tests/localpassage/docker-compose.yml up
 
 localnet-stop:
 	docker-compose down

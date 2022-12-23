@@ -60,7 +60,7 @@ FROM ${RUNNER_IMAGE}
 
 COPY --from=builder /passage/build/passage /bin/passage
 
-ENV HOME /passage
+ENV HOME /passage-home
 WORKDIR $HOME
 
 EXPOSE 26656
