@@ -12,8 +12,8 @@ else
   sudo apt update
   sudo apt install build-essential jq wget git -y
 
-  wget https://dl.google.com/go/go1.17.1.linux-amd64.tar.gz
-  tar -xvf go1.17.1.linux-amd64.tar.gz
+  wget https://dl.google.com/go/go1.19.4.linux-amd64.tar.gz
+  tar -xvf go1.19.4.linux-amd64.tar.gz
   sudo mv go /usr/local
 
   echo "" >> ~/.bashrc
@@ -37,18 +37,18 @@ select yn in "Yes" "No"; do
 done
 
 DAEMON=passage
-DENOM=upasg
-CHAIN_ID=passage-1
+CHAIN_ID=arcade-1
+DENOM=upasgx
 PERSISTENT_PEERS=""
 
 echo "install Passage3D"
 git clone https://github.com/envadiv/Passage3D
 cd Passage3D
 git fetch
-git checkout v1.0.0
+git checkout shlok/new-cosmwasm
 make install
 
-echo "Passage3D has been installed successfully!"
+echo "Passage3D testnet has been installed successfully!"
 echo ""
 echo "-- Next we will need to set up your keys and moniker"
 echo "-- Please choose a name for your key --"
