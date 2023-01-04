@@ -1,7 +1,7 @@
 #!/bin/sh
 PASSAGE_HOME="/tmp/passage$(date +%s)"
-CHAIN_ID=passage-1
-DENOM=upasg
+CHAIN_ID=arcade-1
+DENOM=upasgx
 
 set -e
 
