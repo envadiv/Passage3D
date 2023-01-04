@@ -1,7 +1,7 @@
 #!/bin/sh
 PASSAGE_HOME="/tmp/passage$(date +%s)"
-CHAIN_ID=passage-1
-DENOM=upasg
+CHAIN_ID=arcade-1
+DENOM=upasgx
 
 set -e
 
@@ -19,9 +19,9 @@ echo "..........Fetching genesis......."
 rm -rf $PASSAGE_HOME/config/genesis.json
 cp ../$CHAIN_ID/genesis-prelaunch.json $PASSAGE_HOME/config/genesis.json
 
-sed -i "s/172800000000000/600000000000/g" $DAEMON_HOME-1/config/genesis.json
-sed -i "s/172800s/600s/g" $DAEMON_HOME-1/config/genesis.json
-sed -i "s/stake/$DENOM/g" $DAEMON_HOME-1/config/genesis.json
+# sed -i "s/172800000000000/600000000000/g" $DAEMON_HOME-1/config/genesis.json
+# sed -i "s/172800s/600s/g" $DAEMON_HOME-1/config/genesis.json
+# sed -i "s/stake/$DENOM/g" $DAEMON_HOME-1/config/genesis.json
 
 echo "..........Collecting gentxs......."
 ./build/passage collect-gentxs --home $PASSAGE_HOME --gentx-dir ../$CHAIN_ID/gentxs
