@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHAIN_ID=localpassage
+CHAIN_ID=arcade-1
 PASSAGE_HOME=$HOME/.passage
 CONFIG_FOLDER=$PASSAGE_HOME/config
 MONIKER=lo-val
