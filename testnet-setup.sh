@@ -8,7 +8,7 @@ MONIKER=lo-val
 MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
 
 install_prerequisites () {
-    apk add dasel
+    go install github.com/tomwright/dasel/cmd/dasel@master
 }
 
 edit_genesis () {
