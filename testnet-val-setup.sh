@@ -83,7 +83,7 @@ echo ""
 
 echo "----------Setting up your validator node------------"
 $DAEMON init --chain-id $CHAIN_ID $YOUR_NAME
-echo "------Downloading Passage3D Mainnet genesis--------"
+echo "------Downloading Passage3D Testnet genesis--------"
 curl -s https://raw.githubusercontent.com/envadiv/mainnet/main/passage-1/genesis.json > ~/.passage/config/genesis.json
 
 echo "----------Setting config for seed node---------"
