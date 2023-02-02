@@ -1,53 +1,17 @@
-# LocalPassage
+## LocalPassage Accounts
 
-LocalPassage is a complete Passage testnet containerized with Docker and orchestrated with a simple docker-compose file. LocalPassage comes preconfigured with opinionated, sensible defaults for a standard testing environment.
+LocalPassage is pre-configured with one validator and 9 accounts with pasg
 
-LocalPassage comes with no initial state. In the future, we would like to be able to run LocalPassage with a mainnet export.
-
-## Prerequisites
-
-Ensure you have docker docker-compose, and golang installed:
-
-```sh
-# Docker
-sudo apt-get remove docker docker-engine docker.io
-sudo apt-get update
-sudo apt install docker.io -y
-
-# Docker compose
-sudo apt install docker-compose -y
-
-# Golang
-curl -OL https://golang.org/dl/go1.18.1.linux-amd64.tar.gz
-sudo tar -C /usr/local -xvf go1.18.1.linux-amd64.tar.gz
-export PATH=$PATH:/usr/local/go/bin
-```
-
-Alternatively, internal teams can use the AWS Launch Template `passage-localnet-devbox-template` to provision an instance with these dependencies already installed.
-
-## LocalPassage - No Initial State
-
-The following commands must be executed from the root folder of the Passage repository.
-
-1. Make any change to the passage code that you want to test
-
-2. Initialize LocalPassage:
-
-   ```bash
-   make localnet-start
-   ```
-
-   The command:
-
-   - Runs `passage testnet` to initialize the configuration files of the network. These will be stored under `./mytestnet`.
-   - Runs the `docker-compose.yml` file to spin up the networked nodes in separate containers.
-
-3. You can stop the chain using Ctrl + C.
-
-4. When you are done you can clean up the environment with:
-
-   ```bash
-   make localnet-clean
-   ```
-
-   Which will remove the configuration files found under `./mytestnet`.
+| Account   | Address                                                                                                | Mnemonic                                                                                                                                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| lo-val    | `pasg12smx2wdlyttvyzvzg54y2vnqwq2qjateh25pvl`                                                          | `bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort`                    |
+| lo-test1  | `pasg1cyyzpxplxdzkeea7kwsydadg87357qnau7uhda`                                                          | `notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius`                       |
+| lo-test2  | `pasg18s5lynnmx37hq4wlrw9gdn68sg2uxp5rr4qshp`                                                          | `quality vacuum heart guard buzz spike sight swarm shove special gym robust assume sudden deposit grid alcohol choice devote leader tilt noodle tide penalty`              |
+| lo-test3  | `pasg1qwexv7c6sm95lwhzn9027vyu2ccneaqaxkydds`                                                          | `symbol force gallery make bulk round subway violin worry mixture penalty kingdom boring survey tool fringe patrol sausage hard admit remember broken alien absorb`        |
+| lo-test4  | `pasg14hcxlnwlqtq75ttaxf674vk6mafspg8x9tee0u`                                                          | `bounce success option birth apple portion aunt rural episode solution hockey pencil lend session cause hedgehog slender journey system canvas decorate razor catch empty` |
+| lo-test5  | `pasg12rr534cer5c0vj53eq4y32lcwguyy7nnxg9k3x`                                                          | `second render cat sing soup reward cluster island bench diet lumber grocery repeat balcony perfect diesel stumble piano distance caught occur example ozone loyal`        |
+| lo-test6  | `pasg1nt33cjd5auzh36syym6azgc8tve0jlvk5s25fd`                                                          | `spatial forest elevator battle also spoon fun skirt flight initial nasty transfer glory palm drama gossip remove fan joke shove label dune debate quick`                  |
+| lo-test7  | `pasg10qfrpash5g2vk3hppvu45x0g860czur8z27waz`                                                          | `noble width taxi input there patrol clown public spell aunt wish punch moment will misery eight excess arena pen turtle minimum grain vague inmate`                       |
+| lo-test8  | `pasg1f4tvsdukfwh6s9swrc24gkuz23tp8pd3jxf7js`                                                          | `cream sport mango believe inhale text fish rely elegant below earth april wall rug ritual blossom cherry detail length blind digital proof identify ride`                 |
+| lo-test9  | `pasg1myv43sqgnj5sm4zl98ftl45af9cfzk7nu3vcm6`                                                          | `index light average senior silent limit usual local involve delay update rack cause inmate wall render magnet common feature laundry exact casual resource hundred`       |
+| lo-test10 | `pasg14gs9zqh8m49yy9kscjqu9h72exyf295aztsunm`                                                          | `prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder`     |
