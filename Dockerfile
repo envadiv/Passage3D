@@ -63,6 +63,8 @@ COPY --from=builder /passage/build/passage /bin/passage
 ENV HOME /passage-home
 WORKDIR $HOME
 
+EXPOSE 1317
+EXPOSE 9090
 EXPOSE 26656
 EXPOSE 26657
-EXPOSE 1317
+EXPOSE 26660
