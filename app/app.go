@@ -399,13 +399,12 @@ func NewPassageApp(
 
 	wasmModule := wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper)
 
-	var wasmStack porttypes.IBCModule
-	wasmStack = wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)
+	wasmHandler := wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)
 
 	// Create static IBC router, add ibc-tranfer module route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
-	ibcRouter.AddRoute(wasm.ModuleName, wasmStack)
+	ibcRouter.AddRoute(wasm.ModuleName, wasmHandler)
 	// Setting Router will finalize all routes by sealing router
 	// No more routes can be added
 	app.IBCKeeper.SetRouter(ibcRouter)
