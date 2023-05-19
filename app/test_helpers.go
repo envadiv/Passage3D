@@ -56,7 +56,7 @@ var emptyWasmOptions []wasm.Option = nil
 func setup(withGenesis bool, invCheckPeriod uint) (*PassageApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
-	app := NewPassageApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{}, emptyWasmOptions)
+	app := NewPassageApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, wasm.EnableAllProposals, EmptyAppOptions{}, emptyWasmOptions)
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}

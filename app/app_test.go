@@ -46,7 +46,7 @@ var emptyWasmOpts []wasm.Option = nil
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeEncodingConfig()
 	db := dbm.NewMemDB()
-	app := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, emptyWasmOpts)
+	app := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.EnableAllProposals, EmptyAppOptions{}, emptyWasmOpts)
 
 	for acc := range maccPerms {
 		require.True(
@@ -70,7 +70,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, emptyWasmOpts)
+	app2 := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.EnableAllProposals, EmptyAppOptions{}, emptyWasmOpts)
 	_, err = app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
@@ -80,11 +80,42 @@ func TestGetMaccPerms(t *testing.T) {
 	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
 }
 
+func TestGetEnabledProposals(t *testing.T) {
+	cases := map[string]struct {
+		proposalsEnabled string
+		specificEnabled  string
+		expected         []wasm.ProposalType
+	}{
+		"all disabled": {
+			proposalsEnabled: "false",
+			expected:         wasm.DisableAllProposals,
+		},
+		"all enabled": {
+			proposalsEnabled: "true",
+			expected:         wasm.EnableAllProposals,
+		},
+		"some enabled": {
+			proposalsEnabled: "okay",
+			specificEnabled:  "StoreCode,InstantiateContract",
+			expected:         []wasm.ProposalType{wasm.ProposalTypeStoreCode, wasm.ProposalTypeInstantiateContract},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			ProposalsEnabled = tc.proposalsEnabled
+			EnableSpecificProposals = tc.specificEnabled
+			proposals := GetEnabledProposals()
+			require.Equal(t, tc.expected, proposals)
+		})
+	}
+}
+
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, emptyWasmOpts)
+	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.EnableAllProposals, EmptyAppOptions{}, emptyWasmOpts)
 
 	// Create a new baseapp and configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
@@ -211,7 +242,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCfg := MakeEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, emptyWasmOpts)
+	app := NewPassageApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.EnableAllProposals, EmptyAppOptions{}, emptyWasmOpts)
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
@@ -254,7 +285,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeEncodingConfig()
 	db := dbm.NewMemDB()
-	app := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{}, emptyWasmOpts)
+	app := NewPassageApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, wasm.EnableAllProposals, EmptyAppOptions{}, emptyWasmOpts)
 	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
