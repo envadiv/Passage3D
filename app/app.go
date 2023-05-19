@@ -101,7 +101,6 @@ import (
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	// wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -126,7 +125,6 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
-			// wasmclient.ProposalHandlers,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
