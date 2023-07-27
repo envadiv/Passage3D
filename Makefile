@@ -91,6 +91,12 @@ endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
+ifeq ($(LINK_STATICALLY),true)
+	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
+endif
+ldflags += $(LDFLAGS)
+ldflags := $(strip $(ldflags))
+
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
