@@ -26,6 +26,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -50,6 +51,8 @@ import (
 // package-wide network lock to only allow one test network at a time
 var lock = new(sync.Mutex)
 
+var emptyWasmOpts []wasm.Option = nil
+
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
 type AppConstructor = func(val Validator) servertypes.Application
@@ -61,7 +64,9 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool),
 			val.Ctx.Config.RootDir, 0,
 			encodingCfg,
+			app.GetEnabledProposals(),
 			app.EmptyAppOptions{},
+			emptyWasmOpts,
 			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
