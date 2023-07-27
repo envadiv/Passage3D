@@ -3,9 +3,9 @@ go 1.19
 module github.com/envadiv/Passage3D
 
 require (
+	github.com/CosmWasm/wasmd v0.31.0
 	github.com/cosmos/cosmos-sdk v0.45.16
 	github.com/cosmos/ibc-go/v4 v4.4.2
-	github.com/CosmWasm/wasmd v0.31.0
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/prometheus/client_golang v1.14.0
