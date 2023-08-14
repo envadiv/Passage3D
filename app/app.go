@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 
 	appparams "github.com/envadiv/Passage3D/app/params"
+	"github.com/envadiv/Passage3D/app/upgrades"
+	v1 "github.com/envadiv/Passage3D/app/upgrades/v1"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -149,6 +151,8 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		claimtypes.ModuleName:          {authtypes.Minter},
 	}
+
+	Upgrades = []upgrades.Upgrade{v1.Upgrade}
 )
 
 var (
@@ -489,6 +493,8 @@ func NewPassageApp(
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
+	app.setupUpgradeHandlers()
+
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
@@ -545,6 +551,21 @@ func NewPassageApp(
 	}
 
 	return app
+}
+
+func (app *PassageApp) setupUpgradeHandlers() {
+	for _, upgrade := range Upgrades {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.mm,
+				app.configurator,
+				app.DistrKeeper,
+				app.BankKeeper,
+				app.AccountKeeper,
+			),
+		)
+	}
 }
 
 // Name returns the name of the App
