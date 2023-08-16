@@ -9,7 +9,6 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
 )
@@ -18,7 +17,6 @@ const Name = "v1.0"
 const upasgDenom = "upasg"
 
 var amount = sdk.NewCoins(sdk.NewCoin(upasgDenom, sdk.NewInt(150000000000000)))
-var vestingAcc, _ = sdk.AccAddressFromBech32("pasg1wkcml9mjpyu9kzy4fqy322p958809r64mfug82") // TODO: update with actual account
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          Name,
@@ -34,14 +32,22 @@ func CreateUpgradeHandler(
 	ak auth.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ExecuteProposal1(ctx, dk, bk, ak)
+		if err := ExecuteProposal1(ctx, dk, bk, ak); err != nil {
+			return nil, err
+		}
+
 		return fromVM, nil
 	}
 }
 
 // ExecuteProposal1 moves community pool funds to a vesting account
 func ExecuteProposal1(ctx sdk.Context, dk distribution.Keeper, bk bank.Keeper, ak auth.AccountKeeper) error {
+	vestingAcc, err := sdk.AccAddressFromBech32("pasg105488mw9t3qtp62jhllde28v40xqxpjksjqmvx")
+	if err != nil {
+		return err
+	}
 
+	// 3 year lock-up from relaunch and thereafter weekly vesting until end of year 5 from relaunch
 	pva := vestingtypes.NewPeriodicVestingAccount(authtypes.NewBaseAccount(vestingAcc, nil, ak.GetNextAccountNumber(ctx), 0),
 		amount,
 		1755097200,
@@ -49,22 +55,7 @@ func ExecuteProposal1(ctx sdk.Context, dk distribution.Keeper, bk bank.Keeper, a
 	)
 	ak.SetAccount(ctx, pva)
 
-	feePool := dk.GetFeePool(ctx)
-	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(amount...))
-	if negative {
-		panic("negative amount")
-	}
-
-	feePool.CommunityPool = newPool
-
-	err := bk.SendCoinsFromModuleToAccount(ctx, distributiontypes.ModuleName, vestingAcc, amount)
-	if err != nil {
-		return err
-	}
-
-	dk.SetFeePool(ctx, feePool)
-
-	return nil
+	return dk.DistributeFromFeePool(ctx, amount, vestingAcc)
 }
 
 func genVestingPeriods() []vestingtypes.Period {
