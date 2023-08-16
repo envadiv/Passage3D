@@ -32,7 +32,7 @@ func CreateUpgradeHandler(
 	ak auth.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		if err := ExecuteProposal1(ctx, dk, bk, ak); err != nil {
+		if err := ExecuteProposal(ctx, dk, bk, ak); err != nil {
 			return nil, err
 		}
 
@@ -40,8 +40,8 @@ func CreateUpgradeHandler(
 	}
 }
 
-// ExecuteProposal1 moves community pool funds to a vesting account
-func ExecuteProposal1(ctx sdk.Context, dk distribution.Keeper, bk bank.Keeper, ak auth.AccountKeeper) error {
+// ExecuteProposal moves community pool funds to a multisig vesting account
+func ExecuteProposal(ctx sdk.Context, dk distribution.Keeper, bk bank.Keeper, ak auth.AccountKeeper) error {
 	vestingAcc, err := sdk.AccAddressFromBech32("pasg105488mw9t3qtp62jhllde28v40xqxpjksjqmvx")
 	if err != nil {
 		return err
