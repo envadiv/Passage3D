@@ -1,0 +1,19 @@
+{
+  "main": {
+    "files": [
+      "$all",
+      "!$test"
+    ],
+    "allow": [
+      "$gostd",
+      "github.com/cosmos/cosmos-sdk"
+    ],
+    "deny": {}
+  },
+  "tests": {
+    "files": [
+      "$test"
+    ],
+    "deny": {}
+  }
+}
