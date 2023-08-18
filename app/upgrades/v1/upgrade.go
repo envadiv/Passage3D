@@ -50,7 +50,7 @@ func ExecuteProposal(ctx sdk.Context, dk distribution.Keeper, bk bank.Keeper, ak
 	// 3 year lock-up from relaunch and thereafter weekly vesting until end of year 5 from relaunch
 	pva := vestingtypes.NewPeriodicVestingAccount(authtypes.NewBaseAccount(vestingAcc, nil, ak.GetNextAccountNumber(ctx), 0),
 		amount,
-		1755097200,
+		1784905200,
 		genVestingPeriods(),
 	)
 	ak.SetAccount(ctx, pva)
