@@ -16,6 +16,7 @@ import (
 const Name = "v2.1"
 const upasgDenom = "upasg"
 
+// 150,000,000 $PASG tokens
 var amount = sdk.NewCoins(sdk.NewCoin(upasgDenom, sdk.NewInt(150000000000000)))
 
 var Upgrade = upgrades.Upgrade{
