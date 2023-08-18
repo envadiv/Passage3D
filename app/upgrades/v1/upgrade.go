@@ -13,7 +13,7 @@ import (
 	"github.com/envadiv/Passage3D/app/upgrades"
 )
 
-const Name = "v1.0"
+const Name = "v2.1"
 const upasgDenom = "upasg"
 
 var amount = sdk.NewCoins(sdk.NewCoin(upasgDenom, sdk.NewInt(150000000000000)))
