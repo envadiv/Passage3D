@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "passage3d/claim/v1beta1/params.proto";
 import "passage3d/claim/v1beta1/claim_record.proto";
+import "passage3d/claim/v1beta1/supply.proto";
 
 option go_package = "github.com/envadiv/passage3d/x/claim/types";
 
@@ -34,6 +35,11 @@ service Query {
   // TotalClaimable RPC returns total claimable amount for address
   rpc TotalClaimable(QueryTotalClaimableRequest) returns (QueryTotalClaimableResponse) {
     option (google.api.http).get = "/passage3d/claim/v1beta1/total_claimable/{address}";
+  }
+
+  // SupplySummary return supply summary
+  rpc SupplySummary(QuerySupplySummaryRequest) returns (QuerySupplySummaryResponse) {
+    option (google.api.http).get = "/passage3d/supply/v1beta1/summary";
   }
 
 }
@@ -100,4 +106,12 @@ message QueryTotalClaimableResponse {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+}
+
+// QuerySupplySummaryRequest is request type for the Query/SupplySummary RPC method
+message QuerySupplySummaryRequest {}
+
+// QuerySupplySummaryResponse is response type for the Query/SupplySummary RPC method
+message QuerySupplySummaryResponse {
+  Supply supply = 1 [ (gogoproto.nullable) = false ];
 }
