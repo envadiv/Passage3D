@@ -202,3 +202,30 @@ $ %s query claim total-claimable osmo1ey69r37gfxvxg62sh4r0ktpuc46pzjrm23kcrx
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
+
+// GetCmdSupplySummary implements query for supply summary
+func GetCmdSupplySummary() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "supply-summary",
+		Short: "Query for supply summary",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.SupplySummary(context.Background(), &types.QuerySupplySummaryRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(&res.Supply)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}

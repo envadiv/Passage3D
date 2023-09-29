@@ -10,6 +10,9 @@ import (
 	"github.com/envadiv/Passage3D/x/claim/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Querier is used as Keeper will have duplicate methods if used directly, and gRPC names take precedence over keeper
@@ -89,4 +92,63 @@ func (k Keeper) TotalClaimable(goCtx context.Context, req *types.QueryTotalClaim
 	return &types.QueryTotalClaimableResponse{
 		Coins: coins,
 	}, err
+}
+
+func (k Keeper) SupplySummary(goCtx context.Context, req *types.QuerySupplySummaryRequest) (
+	*types.QuerySupplySummaryResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	var supplyData types.Supply
+	k.bankKeeper.IterateTotalSupply(ctx, func(c sdk.Coin) bool {
+		supplyData.Total = append(supplyData.Total, c)
+		return false
+	})
+	bondDenom := k.stakingKeeper.BondDenom(ctx)
+
+	delegationsMap := make(map[string]sdk.Coins)
+	k.stakingKeeper.IterateAllDelegations(ctx, func(delegation stakingtypes.Delegation) bool {
+		// Converting delegated shares to sdk.Coin
+		delegated := sdk.NewCoin(bondDenom, delegation.Shares.TruncateInt())
+		delegationsMap[delegation.DelegatorAddress] = delegationsMap[delegation.DelegatorAddress].Add(delegated)
+		return false
+	})
+
+	k.accountKeeper.IterateAccounts(ctx, func(account authtypes.AccountI) bool {
+		if ma, ok := account.(*authtypes.ModuleAccount); ok {
+			switch ma.Name {
+			case stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName:
+				return false
+			}
+		}
+		delegatedTokens := delegationsMap[account.GetAddress().String()]
+		balances := k.bankKeeper.GetAllBalances(ctx, account.GetAddress())
+		va, ok := account.(vestingexported.VestingAccount)
+		if !ok {
+			supplyData.Available.Bonded = supplyData.Available.Bonded.Add(delegatedTokens...)
+			supplyData.Available.Unbonded = supplyData.Available.Unbonded.Add(balances...)
+		} else {
+			vestingCoins := va.GetVestingCoins(ctx.BlockTime())
+			delegatedVesting := va.GetDelegatedVesting()
+			lockedCoins := va.LockedCoins(ctx.BlockTime())
+			spendableCoins := balances.Sub(lockedCoins)
+			if delegatedVesting.AmountOf(bondDenom).GT(vestingCoins.AmountOf(bondDenom)) {
+				supplyData.Vesting.Bonded = supplyData.Vesting.Bonded.Add(vestingCoins...)
+				supplyData.Available.Bonded = supplyData.Available.Bonded.Add(delegatedVesting...).Sub(vestingCoins)
+			} else {
+				supplyData.Vesting.Bonded = supplyData.Vesting.Bonded.Add(delegatedVesting...)
+				supplyData.Available.Bonded = supplyData.Available.Bonded.Add(delegatedTokens...).Sub(delegatedVesting)
+			}
+			supplyData.Vesting.Unbonded = supplyData.Vesting.Unbonded.Add(lockedCoins...)
+			supplyData.Available.Unbonded = supplyData.Available.Unbonded.Add(spendableCoins...)
+		}
+		return false
+	})
+
+	communityPool, _ := k.distrKeeper.GetFeePoolCommunityCoins(ctx).TruncateDecimal()
+
+	supplyData.Circulating = supplyData.Total.Sub(supplyData.Vesting.Unbonded).Sub(supplyData.Vesting.Bonded).Sub(communityPool)
+
+	return &types.QuerySupplySummaryResponse{
+		Supply: supplyData,
+	}, nil
 }

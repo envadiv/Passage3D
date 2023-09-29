@@ -37,6 +37,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	claimCmd "github.com/envadiv/Passage3D/x/claim/client/cli"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -198,6 +199,11 @@ func queryCommand() *cobra.Command {
 	)
 
 	app.ModuleBasics.AddQueryCommands(cmd)
+
+	// Add supply summary command in bank module queries
+	bankCmd, _, _ := cmd.Find([]string{"bank"})
+	bankCmd.AddCommand(claimCmd.GetCmdSupplySummary())
+
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd

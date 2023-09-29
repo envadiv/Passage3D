@@ -56,3 +56,9 @@ func (suite *KeeperTestSuite) TestGrpcQueryClaimRecords() {
 	//suite.Require().NoError(err)
 	//suite.Require().Equal(actionResp.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(100))).String())
 }
+
+func (suite *KeeperTestSuite) TestGrpcQuerySupplySummary() {
+	grpcClient := suite.queryClient
+	_, err := grpcClient.SupplySummary(context.Background(), &types.QuerySupplySummaryRequest{})
+	suite.Require().NoError(err)
+}
