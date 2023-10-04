@@ -51,7 +51,7 @@ func ExecuteProposal(ctx sdk.Context, ck claim.Keeper) error {
 
 	params := ck.GetParams(ctx)
 	params.AirdropEnabled = true
-	params.AirdropStartTime = time.Date(2023, 10, 16, 0, 0, 0, 0, time.UTC) // (dd/mm/yyyy: 16/10/2023)
+	params.AirdropStartTime = time.Date(2023, 10, 16, 15, 0, 0, 0, time.UTC) // (dd/mm/yyyy: 16/10/2023, 15:00)
 	params.DurationOfDecay = sixMonths
 	params.DurationUntilDecay = sixMonths
 
