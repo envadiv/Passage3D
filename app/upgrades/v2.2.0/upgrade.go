@@ -45,9 +45,7 @@ func ExecuteProposal(ctx sdk.Context, ck claim.Keeper) error {
 	var newClaimRecords = []claimtypes.ClaimRecord{}
 	var sixMonths = time.Hour * 24 * 180
 
-	existingClaimRecords := ck.GetClaimRecords(ctx)
-	existingClaimRecords = append(existingClaimRecords, newClaimRecords...)
-	if err := ck.SetClaimRecords(ctx, existingClaimRecords); err != nil {
+	if err := ck.SetClaimRecords(ctx, newClaimRecords); err != nil {
 		panic(err)
 	}
 
