@@ -12,6 +12,7 @@ import (
 	appparams "github.com/envadiv/Passage3D/app/params"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	v1 "github.com/envadiv/Passage3D/app/upgrades/v1"
+	"github.com/envadiv/Passage3D/app/upgrades/v2.2.0"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -188,7 +189,7 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 
-	Upgrades = []upgrades.Upgrade{v1.Upgrade}
+	Upgrades = []upgrades.Upgrade{v1.Upgrade, v2.Upgrade}
 )
 
 var (
@@ -654,6 +655,7 @@ func (app *PassageApp) setupUpgradeHandlers() {
 				app.DistrKeeper,
 				app.BankKeeper,
 				app.AccountKeeper,
+				app.ClaimKeeper,
 			),
 		)
 	}

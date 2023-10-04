@@ -11,6 +11,7 @@ import (
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
+	claim "github.com/envadiv/Passage3D/x/claim/keeper"
 )
 
 const Name = "v2.1"
@@ -31,6 +32,7 @@ func CreateUpgradeHandler(
 	dk distribution.Keeper,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
+	ck claim.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if err := ExecuteProposal(ctx, dk, bk, ak); err != nil {
