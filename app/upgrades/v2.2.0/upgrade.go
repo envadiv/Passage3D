@@ -27,13 +27,13 @@ func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	_ distribution.Keeper,
-	_ bank.Keeper,
-	_ auth.AccountKeeper,
+	bk bank.Keeper,
+	ak auth.AccountKeeper,
 	ck claim.Keeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		if err := ExecuteProposal(ctx, ck); err != nil {
+		if err := ExecuteProposal(ctx, ak, bk, ck); err != nil {
 			return nil, err
 		}
 
@@ -41,11 +41,27 @@ func CreateUpgradeHandler(
 	}
 }
 
-func ExecuteProposal(ctx sdk.Context, ck claim.Keeper) error {
+func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck claim.Keeper) error {
 	var newClaimRecords = []claimtypes.ClaimRecord{}
 	var sixMonths = time.Hour * 24 * 180
 
-	if err := ck.SetClaimRecords(ctx, newClaimRecords); err != nil {
+	// sum the newly added claim records balance
+	var amount sdk.Coins
+	for _, record := range newClaimRecords {
+		amount.Add(record.ClaimableAmount...)
+
+		// set the claim record in claim module
+		ck.SetClaimRecord(ctx, record)
+	}
+
+	// get airdrop account
+	airdropAccAddr, err := sdk.AccAddressFromBech32("pasg1lel0s624jr9zsz4ml6yv9e5r4uzukfs7hwh22w")
+	if err != nil {
+		return err
+	}
+
+	// send the added balances from airdrop account to claim module account
+	if err := bk.SendCoinsFromAccountToModule(ctx, airdropAccAddr, claimtypes.ModuleName, amount); err != nil {
 		return err
 	}
 
