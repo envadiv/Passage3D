@@ -1,7 +1,6 @@
 package v2
 
 import (
-	"fmt"
 	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -18,19 +17,10 @@ import (
 
 const Name = "v2.2.0"
 
-var (
-	newClaimRecords []claimtypes.ClaimRecord
-	Upgrade         = upgrades.Upgrade{
-		UpgradeName:          Name,
-		CreateUpgradeHandler: CreateUpgradeHandler,
-		StoreUpgrades:        storetypes.StoreUpgrades{},
-	}
-)
-
-func init() {
-	fmt.Println("loading csv...")
-	newClaimRecords = loadCsv()
-	fmt.Println("loaded claim records: ", len(newClaimRecords))
+var Upgrade = upgrades.Upgrade{
+	UpgradeName:          Name,
+	CreateUpgradeHandler: CreateUpgradeHandler,
+	StoreUpgrades:        storetypes.StoreUpgrades{},
 }
 
 func CreateUpgradeHandler(
@@ -53,6 +43,7 @@ func CreateUpgradeHandler(
 
 func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck claim.Keeper) error {
 	var sixMonths = time.Hour * 24 * 180
+	newClaimRecords := getClaimRecords()
 
 	// sum the newly added claim records balance
 	var amount sdk.Coins
