@@ -636,6 +636,7 @@ func NewPassageApp(
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
+	// Register snapshot extensions to enable state-sync for wasm.
 	if manager := app.SnapshotManager(); manager != nil {
 		err = manager.RegisterExtensions(
 				wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.WasmKeeper),
