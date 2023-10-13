@@ -101,11 +101,7 @@ func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord
 
 			newCoin := sdk.NewCoin(claimRecord.ClaimableAmount[0].Denom, sdk.NewInt(newAmount))
 
-			effectiveAmount, err = newCoin.SafeSub(existingClaimRecord.ClaimableAmount[0])
-
-			if err != nil {
-				return sdk.Coin{}, err
-			}
+			effectiveAmount = newCoin.Sub(existingClaimRecord.ClaimableAmount[0])
 
 			fmt.Println("************ Effective Amount ***************: ", effectiveAmount)
 
