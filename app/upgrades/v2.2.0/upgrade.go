@@ -89,6 +89,12 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 		return err
 	}
 
+	oldAmount := sdk.Coins{
+		sdk.NewCoin(amount[0].Denom, sdk.NewInt(18946800000000)),
+	}
+
+	amount = amount.Sub(oldAmount)
+
 	// send the added balances from airdrop account to claim module account
 	if err := bk.SendCoinsFromAccountToModule(ctx, airdropAccAddr, claimtypes.ModuleName, amount); err != nil {
 		return err
