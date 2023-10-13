@@ -94,13 +94,18 @@ func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord
 	if len(existingClaimRecord.ClaimableAmount) != 0 {
 		amountInt := existingClaimRecord.ClaimableAmount[0].Amount
 		if amountInt.IsZero() {
+			fmt.Println("Old Amount:", amountInt, existingClaimRecord.ClaimableAmount[0])
 			newAmount := amountInt.Int64() / int643800 * int649322
 
 			fmt.Println("************ NEW AMOUNT ***************: ", newAmount)
 
 			newCoin := sdk.NewCoin(claimRecord.ClaimableAmount[0].Denom, sdk.NewInt(newAmount))
 
-			effectiveAmount = newCoin.Sub(existingClaimRecord.ClaimableAmount[0])
+			effectiveAmount, err = newCoin.SafeSub(existingClaimRecord.ClaimableAmount[0])
+
+			if err != nil {
+				return sdk.Coin{}, err
+			}
 
 			fmt.Println("************ Effective Amount ***************: ", effectiveAmount)
 
