@@ -82,12 +82,12 @@ func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord
 	}
 
 	// if the record found in the state we no need to check the entries present in the claimRecord
-	if k.hasClaimRecord(ctx, addr) {
-		existingClaimRecord, err := k.GetClaimRecord(ctx, addr)
-		if err != nil {
-			return err
-		}
+	existingClaimRecord, err := k.GetClaimRecord(ctx, addr)
+	if err != nil {
+		return err
+	}
 
+	if len(existingClaimRecord.ClaimableAmount) != 0 {
 		existingClaimRecord.ClaimableAmount[0].Amount = existingClaimRecord.ClaimableAmount[0].Amount.QuoRaw(5700).MulRaw(9322)
 		existingClaimRecord.ClaimableAmount = sdk.NewCoins(existingClaimRecord.ClaimableAmount...).Add(claimRecord.ClaimableAmount...)
 		claimRecord = existingClaimRecord
@@ -117,12 +117,6 @@ func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 		claimRecords = append(claimRecords, claimRecord)
 	}
 	return claimRecords
-}
-
-func (k Keeper) hasClaimRecord(ctx sdk.Context, addr sdk.AccAddress) bool {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.ClaimRecordsStorePrefix)
-	return prefixStore.Has(addr)
 }
 
 // GetClaimRecord returns the claim record for a specific address
