@@ -72,8 +72,8 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 	for _, record := range NewClaimRecords {
 		amount.Add(record.ClaimableAmount...)
 
-		// set the claim record in claim module
-		ck.SetClaimRecord(ctx, *record)
+		// update the claim record in claim module
+		ck.UpdateClaimRecord(ctx, *record)
 	}
 
 	// get airdrop account
