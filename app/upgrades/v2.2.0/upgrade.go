@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"fmt"
 	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -75,6 +76,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 		// update the claim record in claim module
 		ck.UpdateClaimRecord(ctx, *record)
 	}
+	ctx.Logger().Info(fmt.Sprintf("Added new claim records: %d", len(NewClaimRecords)))
 
 	// get airdrop account
 	airdropAccAddr, err := sdk.AccAddressFromBech32("pasg1lel0s624jr9zsz4ml6yv9e5r4uzukfs7hwh22w")
@@ -86,6 +88,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 	if err := bk.SendCoinsFromAccountToModule(ctx, airdropAccAddr, claimtypes.ModuleName, amount); err != nil {
 		return err
 	}
+	ctx.Logger().Info(fmt.Sprintf("sending coins: %s from airdrop account to claim module account", amount.String()))
 
 	params := ck.GetParams(ctx)
 	params.AirdropEnabled = true
