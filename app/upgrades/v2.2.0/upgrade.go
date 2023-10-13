@@ -78,7 +78,10 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 		if err != nil {
 			return err
 		}
-		amount = amount.Add([]sdk.Coin{effectiveAmount}...)
+
+		if !effectiveAmount.IsZero() {
+			amount = amount.Add([]sdk.Coin{effectiveAmount}...)
+		}
 	}
 	ctx.Logger().Info(fmt.Sprintf("added new claim records: %d", len(NewClaimRecords)))
 
