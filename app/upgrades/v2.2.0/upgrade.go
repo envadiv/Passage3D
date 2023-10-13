@@ -89,7 +89,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 
 	params := ck.GetParams(ctx)
 	params.AirdropEnabled = true
-	params.AirdropStartTime = time.Date(2023, 10, 16, 15, 0, 0, 0, time.UTC) // (dd/mm/yyyy: 16/10/2023, 15:00)
+	params.AirdropStartTime = time.Date(2023, 10, 12, 15, 0, 0, 0, time.UTC) // (dd/mm/yyyy: 16/10/2023, 15:00)
 	params.DurationOfDecay = sixMonths
 	params.DurationUntilDecay = sixMonths
 
