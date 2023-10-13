@@ -76,7 +76,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 		// update the claim record in claim module
 		ck.UpdateClaimRecord(ctx, *record)
 	}
-	ctx.Logger().Info(fmt.Sprintf("Added new claim records: %d", len(NewClaimRecords)))
+	ctx.Logger().Info(fmt.Sprintf("added new claim records: %d", len(NewClaimRecords)))
 
 	// get airdrop account
 	airdropAccAddr, err := sdk.AccAddressFromBech32("pasg1lel0s624jr9zsz4ml6yv9e5r4uzukfs7hwh22w")
