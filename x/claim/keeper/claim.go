@@ -88,7 +88,7 @@ func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord
 	}
 
 	if len(existingClaimRecord.ClaimableAmount) != 0 {
-		existingClaimRecord.ClaimableAmount[0].Amount = existingClaimRecord.ClaimableAmount[0].Amount.QuoRaw(5700).MulRaw(9322)
+		existingClaimRecord.ClaimableAmount[0].Amount = existingClaimRecord.ClaimableAmount[0].Amount.QuoRaw(3800).MulRaw(9322)
 		existingClaimRecord.ClaimableAmount = sdk.NewCoins(existingClaimRecord.ClaimableAmount...).Add(claimRecord.ClaimableAmount...)
 		claimRecord = existingClaimRecord
 	}
