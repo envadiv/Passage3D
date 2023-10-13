@@ -75,42 +75,24 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) e
 }
 
 // UpdateClaimRecord updates a claim record if a entry already exists in the store else adds a new entry.
-func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) (sdk.Coin, error) {
+func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) error {
 	addr, err := sdk.AccAddressFromBech32(claimRecord.Address)
 	if err != nil {
-		return sdk.Coin{}, err
+		return err
 	}
 
 	// if the record found in the state we no need to check the entries present in the claimRecord
 	existingClaimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
-		return sdk.Coin{}, err
+		return err
 	}
-
-	var effectiveAmount sdk.Coin
-	var int643800 int64 = 3800
-	var int649322 int64 = 9322
 
 	if len(existingClaimRecord.ClaimableAmount) != 0 {
-		amountInt := existingClaimRecord.ClaimableAmount[0].Amount
-		if amountInt.IsZero() {
-			fmt.Println("Old Amount:", amountInt, existingClaimRecord.ClaimableAmount[0])
-			newAmount := amountInt.Int64() / int643800 * int649322
-
-			fmt.Println("************ NEW AMOUNT ***************: ", newAmount)
-
-			newCoin := sdk.NewCoin(claimRecord.ClaimableAmount[0].Denom, sdk.NewInt(newAmount))
-
-			effectiveAmount = newCoin.Sub(existingClaimRecord.ClaimableAmount[0])
-
-			fmt.Println("************ Effective Amount ***************: ", effectiveAmount)
-
-			existingClaimRecord.ClaimableAmount = sdk.NewCoins([]sdk.Coin{newCoin}...).Add(claimRecord.ClaimableAmount...)
-			claimRecord = existingClaimRecord
-		}
+		existingClaimRecord.ClaimableAmount = sdk.NewCoins(existingClaimRecord.ClaimableAmount...).Add(claimRecord.ClaimableAmount...)
+		claimRecord = existingClaimRecord
 	}
 
-	return effectiveAmount, k.SetClaimRecord(ctx, claimRecord)
+	return k.SetClaimRecord(ctx, claimRecord)
 }
 
 // GetClaimRecords get claimables for genesis export
@@ -278,12 +260,12 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-	k.clearInitialClaimables(ctx)
+	k.ClearInitialClaimables(ctx)
 	return nil
 }
 
 // ClearClaimables clear claimable amounts
-func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
+func (k Keeper) ClearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.ClaimRecordsStorePrefix)
 	defer iterator.Close()

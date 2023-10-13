@@ -68,19 +68,17 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 		return err
 	}
 
-	// sum the newly added claim records balance
+	// first clear old data
+	ck.ClearInitialClaimables(ctx)
+
+	// add/update the newly added claim records and update module account balance
 	var amount sdk.Coins
 	for _, record := range NewClaimRecords {
 		amount = amount.Add(record.ClaimableAmount...)
 
 		// update the claim record in claim module
-		effectiveAmount, err := ck.UpdateClaimRecord(ctx, *record)
-		if err != nil {
+		if err := ck.UpdateClaimRecord(ctx, *record); err != nil {
 			return err
-		}
-
-		if !effectiveAmount.IsZero() {
-			amount = amount.Add([]sdk.Coin{effectiveAmount}...)
 		}
 	}
 	ctx.Logger().Info(fmt.Sprintf("added new claim records: %d", len(NewClaimRecords)))
