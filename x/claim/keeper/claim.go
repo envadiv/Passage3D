@@ -122,7 +122,7 @@ func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 func (k Keeper) hasClaimRecord(ctx sdk.Context, addr sdk.AccAddress) bool {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.ClaimRecordsStorePrefix)
-	return !prefixStore.Has(addr)
+	return prefixStore.Has(addr)
 }
 
 // GetClaimRecord returns the claim record for a specific address
