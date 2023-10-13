@@ -88,7 +88,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 	if err := bk.SendCoinsFromAccountToModule(ctx, airdropAccAddr, claimtypes.ModuleName, amount); err != nil {
 		return err
 	}
-	ctx.Logger().Info(fmt.Sprintf("sending coins: %s from airdrop account to claim module account", amount.String()))
+	ctx.Logger().Info(fmt.Sprintf("sent coins: %s from airdrop account to claim module account", amount.String()))
 
 	params := ck.GetParams(ctx)
 	params.AirdropEnabled = true
