@@ -1,27 +1,25 @@
 name: Lint
-# Lint runs golangci-lint over the entire passage3d repository
-# This workflow is run on every pull request and push to master
-# The `golangci` will pass without running if no *.{go, mod, sum} files have been changed.
 on:
-  pull_request:
   push:
+    tags:
+      - v*
     branches:
-      - master
+      - main
+  pull_request:
+permissions:
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  # pull-requests: read
 jobs:
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
       - uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
-          version: latest
-          skip-go-installation: true
-        if: env.GIT_DIFF
+          version: 1.49.0
