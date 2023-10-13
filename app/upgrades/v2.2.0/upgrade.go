@@ -74,7 +74,11 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 		amount = amount.Add(record.ClaimableAmount...)
 
 		// update the claim record in claim module
-		ck.UpdateClaimRecord(ctx, *record)
+		effectiveAmount, err := ck.UpdateClaimRecord(ctx, *record)
+		if err != nil {
+			return err
+		}
+		amount = amount.Add([]sdk.Coin{effectiveAmount}...)
 	}
 	ctx.Logger().Info(fmt.Sprintf("added new claim records: %d", len(NewClaimRecords)))
 

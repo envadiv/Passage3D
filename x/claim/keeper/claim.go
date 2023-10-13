@@ -75,25 +75,40 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) e
 }
 
 // UpdateClaimRecord updates a claim record if a entry already exists in the store else adds a new entry.
-func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) error {
+func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) (sdk.Coin, error) {
 	addr, err := sdk.AccAddressFromBech32(claimRecord.Address)
 	if err != nil {
-		return err
+		return sdk.Coin{}, err
 	}
 
 	// if the record found in the state we no need to check the entries present in the claimRecord
 	existingClaimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
-		return err
+		return sdk.Coin{}, err
 	}
 
+	var effectiveAmount sdk.Coin
+	var int643800 int64 = 3800
+	var int649322 int64 = 9322
+
 	if len(existingClaimRecord.ClaimableAmount) != 0 {
-		existingClaimRecord.ClaimableAmount[0].Amount = existingClaimRecord.ClaimableAmount[0].Amount.QuoRaw(3800).MulRaw(9322)
-		existingClaimRecord.ClaimableAmount = sdk.NewCoins(existingClaimRecord.ClaimableAmount...).Add(claimRecord.ClaimableAmount...)
+		amountInt := existingClaimRecord.ClaimableAmount[0].Amount
+
+		newAmount := amountInt.Int64() / int643800 * int649322
+
+		fmt.Println("************NEW AMOUNT***************: ", newAmount)
+
+		newCoin := sdk.NewCoin(claimRecord.ClaimableAmount[0].Denom, sdk.NewInt(newAmount))
+
+		effectiveAmount = newCoin.Sub(existingClaimRecord.ClaimableAmount[0])
+
+		fmt.Println("************effectiveAmount***************: ", effectiveAmount)
+
+		existingClaimRecord.ClaimableAmount = sdk.NewCoins([]sdk.Coin{newCoin}...).Add(claimRecord.ClaimableAmount...)
 		claimRecord = existingClaimRecord
 	}
 
-	return k.SetClaimRecord(ctx, claimRecord)
+	return effectiveAmount, k.SetClaimRecord(ctx, claimRecord)
 }
 
 // GetClaimRecords get claimables for genesis export
