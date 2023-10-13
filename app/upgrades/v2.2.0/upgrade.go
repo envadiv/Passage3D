@@ -70,7 +70,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 	// sum the newly added claim records balance
 	var amount sdk.Coins
 	for _, record := range NewClaimRecords {
-		amount.Add(record.ClaimableAmount...)
+		amount = amount.Add(record.ClaimableAmount...)
 
 		// update the claim record in claim module
 		ck.UpdateClaimRecord(ctx, *record)
