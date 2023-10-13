@@ -76,23 +76,18 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) e
 
 // UpdateClaimRecord updates a claim record if a entry already exists in the store else adds a new entry.
 func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) error {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, types.ClaimRecordsStorePrefix)
-
 	addr, err := sdk.AccAddressFromBech32(claimRecord.Address)
 	if err != nil {
 		return err
 	}
 
-	if !prefixStore.Has(addr) {
-		existingClaimRecord, err := k.GetClaimRecord(ctx, addr)
-		if err != nil {
-			return err
-		}
-
-		existingClaimRecord.ClaimableAmount = sdk.NewCoins(existingClaimRecord.ClaimableAmount...).Add(claimRecord.ClaimableAmount...)
-		claimRecord = existingClaimRecord
+	existingClaimRecord, err := k.GetClaimRecord(ctx, addr)
+	if err != nil {
+		return err
 	}
+
+	existingClaimRecord.ClaimableAmount = sdk.NewCoins(existingClaimRecord.ClaimableAmount...).QuoInt(5700).MulInt(9322).Add(claimRecord.ClaimableAmount...)
+	claimRecord = existingClaimRecord
 
 	return k.SetClaimRecord(ctx, claimRecord)
 }
