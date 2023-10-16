@@ -676,6 +676,7 @@ func (app *PassageApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *PassageApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	BeginBlockFork(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
