@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/envadiv/Passage3D/app"
 	"github.com/envadiv/Passage3D/app/params"
 	"github.com/stretchr/testify/require"
@@ -26,7 +27,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -51,7 +51,7 @@ import (
 // package-wide network lock to only allow one test network at a time
 var lock = new(sync.Mutex)
 
-var emptyWasmOpts []wasm.Option = nil
+var emptyWasmOpts []wasm.Option
 
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
@@ -174,6 +174,7 @@ type (
 
 // New creates a new Network for integration tests.
 func New(t *testing.T, cfg Config) *Network {
+	t.Helper()
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()
@@ -259,8 +260,8 @@ func New(t *testing.T, cfg Config) *Network {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		require.NoError(t, os.MkdirAll(filepath.Join(nodeDir, "config"), 0755))
-		require.NoError(t, os.MkdirAll(clientDir, 0755))
+		require.NoError(t, os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755))
+		require.NoError(t, os.MkdirAll(clientDir, 0o755))
 
 		tmCfg.SetRoot(nodeDir)
 		tmCfg.Moniker = nodeDirName

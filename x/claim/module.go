@@ -6,18 +6,16 @@ import (
 	"fmt"
 
 	"github.com/envadiv/Passage3D/x/claim/client/cli"
-	"github.com/envadiv/Passage3D/x/claim/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/envadiv/Passage3D/x/claim/keeper"
+	"github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -40,7 +38,7 @@ func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
 }
 
-func (a AppModuleBasic) Name() string {
+func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
@@ -48,19 +46,19 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-func (a AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+func (AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(amino)
 }
 
-func (a AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
-func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -68,21 +66,21 @@ func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEnc
 	return genState.Validate()
 }
 
-func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.Router) {
+func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, router *mux.Router) {
 }
 
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, muxer *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), muxer, types.NewQueryClient(clientCtx))
 	if err != nil {
 		return
 	}
 }
 
-func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
 }
 
-func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd(types.StoreKey)
 }
 
@@ -97,10 +95,10 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, modkeeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
-		keeper:         keeper,
+		keeper:         modkeeper,
 	}
 }
 
@@ -118,17 +116,17 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec) js
 	return jsonCodec.MustMarshalJSON(genState)
 }
 
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-func (am AppModule) Route() sdk.Route {
+func (AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
 
-func (am AppModule) QuerierRoute() string {
+func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-func (am AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
+func (AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
@@ -137,7 +135,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 }
 
-func (am AppModule) ConsensusVersion() uint64 {
+func (AppModule) ConsensusVersion() uint64 {
 	return 1
 }
 

@@ -4,11 +4,9 @@ import (
 	"testing"
 	"time"
 
+	simapp "github.com/envadiv/Passage3D/app"
 	"github.com/envadiv/Passage3D/x/claim"
 	"github.com/envadiv/Passage3D/x/claim/types"
-
-	simapp "github.com/envadiv/Passage3D/app"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -16,33 +14,35 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var now = time.Now().UTC()
-var acc1 = sdk.AccAddress("addr1---------------")
-var acc2 = sdk.AccAddress("addr2---------------")
-var testGenesis = types.GenesisState{
-	ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 1500000000),
-	Params: types.Params{
-		AirdropEnabled:     true,
-		AirdropStartTime:   now,
-		DurationUntilDecay: types.DefaultDurationUntilDecay,
-		DurationOfDecay:    types.DefaultDurationOfDecay,
-		ClaimDenom:         types.DefaultClaimDenom,
-	},
-	ClaimRecords: []types.ClaimRecord{
-		{
-			Address: acc1.String(),
-			ClaimableAmount: []sdk.Coin{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1000000000),
-			}, ActionCompleted: []bool{false},
+var (
+	now         = time.Now().UTC()
+	acc1        = sdk.AccAddress("addr1---------------")
+	acc2        = sdk.AccAddress("addr2---------------")
+	testGenesis = types.GenesisState{
+		ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 1500000000),
+		Params: types.Params{
+			AirdropEnabled:     true,
+			AirdropStartTime:   now,
+			DurationUntilDecay: types.DefaultDurationUntilDecay,
+			DurationOfDecay:    types.DefaultDurationOfDecay,
+			ClaimDenom:         types.DefaultClaimDenom,
 		},
-		{
-			Address: acc2.String(),
-			ClaimableAmount: []sdk.Coin{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000),
-			}, ActionCompleted: []bool{false},
+		ClaimRecords: []types.ClaimRecord{
+			{
+				Address: acc1.String(),
+				ClaimableAmount: []sdk.Coin{
+					sdk.NewInt64Coin(types.DefaultClaimDenom, 1000000000),
+				}, ActionCompleted: []bool{false},
+			},
+			{
+				Address: acc2.String(),
+				ClaimableAmount: []sdk.Coin{
+					sdk.NewInt64Coin(types.DefaultClaimDenom, 500000000),
+				}, ActionCompleted: []bool{false},
+			},
 		},
-	},
-}
+	}
+)
 
 func TestClaimInitGenesis(t *testing.T) {
 	app := simapp.Setup(false)
