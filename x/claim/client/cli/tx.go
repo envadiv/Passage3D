@@ -3,13 +3,12 @@ package cli
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-
 	"github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -42,7 +41,7 @@ func CmdInitialClaim() *cobra.Command {
 				return fmt.Errorf("action type is required")
 			}
 
-			v, ok := types.Action_value[claimAction]
+			v, ok := types.ActionValue[claimAction]
 			if !ok {
 				return fmt.Errorf("invalid action type: %s", claimAction)
 			}

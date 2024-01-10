@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/envadiv/Passage3D/x/claim/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/envadiv/Passage3D/x/claim/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -61,7 +60,7 @@ func (k Keeper) ClaimableForAction(goCtx context.Context, req *types.QueryClaima
 		return nil, err
 	}
 
-	action, ok := types.Action_value[req.Action]
+	action, ok := types.ActionValue[req.Action]
 	if !ok {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid action type: %s", req.Action))
 	}

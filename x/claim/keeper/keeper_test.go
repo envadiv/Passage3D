@@ -22,14 +22,14 @@ type KeeperTestSuite struct {
 	app         *app.PassageApp
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "passage3d-1", Time: time.Now()})
+func (s *KeeperTestSuite) SetupTest() {
+	s.app = app.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "passage3d-1", Time: time.Now()})
 
 	airdropStartTime := time.Now()
-	suite.app.ClaimKeeper.CreateModuleAccount(suite.ctx, sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(10000000)))
+	s.app.ClaimKeeper.CreateModuleAccount(s.ctx, sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(10000000)))
 
-	suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
+	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
 		AirdropEnabled:     true,
 		AirdropStartTime:   airdropStartTime,
 		DurationUntilDecay: types.DefaultDurationUntilDecay,
@@ -37,13 +37,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 		ClaimDenom:         types.DefaultClaimDenom,
 	})
 
-	querier := keeper.Querier{Keeper: suite.app.ClaimKeeper}
+	querier := keeper.Querier{Keeper: s.app.ClaimKeeper}
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, querier)
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	s.queryClient = types.NewQueryClient(queryHelper)
 
-	suite.ctx = suite.ctx.WithBlockTime(airdropStartTime)
+	s.ctx = s.ctx.WithBlockTime(airdropStartTime)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
