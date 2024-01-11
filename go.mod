@@ -165,4 +165,4 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
 
-replace github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.5
+replace github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.6
