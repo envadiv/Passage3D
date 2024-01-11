@@ -32,14 +32,15 @@ func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 
 	existingModuleAcctBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), amount.Denom)
 	if existingModuleAcctBalance.IsPositive() {
-		actual := existingModuleAcctBalance.Add(amount)
-		ctx.Logger().Info(fmt.Sprintf("WARNING! There is a bug in claims on InitGenesis, that you are subject to."+
-			" You likely expect the claims module account balance to be %d %s, but it will actually be %d %s due to this bug.",
-			amount.Amount.Int64(), amount.Denom, actual.Amount.Int64(), actual.Denom))
-	}
-
-	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoins); err != nil {
-		panic(err)
+		if !existingModuleAcctBalance.Equal(amount) {
+			ctx.Logger().Info(fmt.Sprintf("WARNING! There is a bug in claims on InitGenesis, that you are subject to."+
+				" You likely expect the claims module account balance to be %s, but it will actually be %s due to this bug.",
+				amount.String(), existingModuleAcctBalance.String()))
+		}
+	} else {
+		if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, mintCoins); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -71,6 +72,27 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) e
 
 	prefixStore.Set(addr, bz)
 	return nil
+}
+
+// UpdateClaimRecord updates a claim record if a entry already exists in the store else adds a new entry.
+func (k Keeper) UpdateClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) error {
+	addr, err := sdk.AccAddressFromBech32(claimRecord.Address)
+	if err != nil {
+		return err
+	}
+
+	// if the record found in the state we no need to check the entries present in the claimRecord
+	existingClaimRecord, err := k.GetClaimRecord(ctx, addr)
+	if err != nil {
+		return err
+	}
+
+	if len(existingClaimRecord.ClaimableAmount) != 0 {
+		existingClaimRecord.ClaimableAmount = sdk.NewCoins(existingClaimRecord.ClaimableAmount...).Add(claimRecord.ClaimableAmount...)
+		claimRecord = existingClaimRecord
+	}
+
+	return k.SetClaimRecord(ctx, claimRecord)
 }
 
 // GetClaimRecords get claimables for genesis export
@@ -238,12 +260,12 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-	k.clearInitialClaimables(ctx)
+	k.ClearInitialClaimables(ctx)
 	return nil
 }
 
 // ClearClaimables clear claimable amounts
-func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
+func (k Keeper) ClearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.ClaimRecordsStorePrefix)
 	defer iterator.Close()

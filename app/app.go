@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	appparams "github.com/envadiv/Passage3D/app/params"
+	"github.com/envadiv/Passage3D/app/upgrades"
+	"github.com/envadiv/Passage3D/app/upgrades/v2.2.0"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -103,6 +105,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
@@ -185,6 +188,8 @@ var (
 		claimtypes.ModuleName:          {authtypes.Minter},
 		wasm.ModuleName:                {authtypes.Burner},
 	}
+
+	Upgrades = []upgrades.Upgrade{v2.Upgrade}
 )
 
 var (
@@ -574,6 +579,8 @@ func NewPassageApp(
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
+	app.setupUpgradeHandlers()
+
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
@@ -629,6 +636,16 @@ func NewPassageApp(
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
+	// Register snapshot extensions to enable state-sync for wasm.
+	if manager := app.SnapshotManager(); manager != nil {
+		err = manager.RegisterExtensions(
+			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.WasmKeeper),
+		)
+		if err != nil {
+			panic("failed to register snapshot extension: " + err.Error())
+		}
+	}
+
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
@@ -638,11 +655,28 @@ func NewPassageApp(
 	return app
 }
 
+func (app *PassageApp) setupUpgradeHandlers() {
+	for _, upgrade := range Upgrades {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.mm,
+				app.configurator,
+				app.DistrKeeper,
+				app.BankKeeper,
+				app.AccountKeeper,
+				app.ClaimKeeper,
+			),
+		)
+	}
+}
+
 // Name returns the name of the App
 func (app *PassageApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *PassageApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	BeginBlockFork(ctx, app)
 	return app.mm.BeginBlock(ctx, req)
 }
 
