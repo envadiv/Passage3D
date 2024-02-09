@@ -41,18 +41,19 @@ func CreateUpgradeHandler(
 }
 
 func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper) error {
-	// get the module account
+	// get airdrop claim module account
 	addr := ak.GetModuleAddress(claimtypes.ModuleName)
 
-	// get the balances from the account
+	// get the balances from the airdrop claim module account
 	balances := bk.GetAllBalances(ctx, addr)
 
-	// send the tokens to the module account
+	// claim moudle account do not have the burner permissions
+	// so we are sending it to the another module account and burning the tokens
 	if err := bk.SendCoinsFromModuleToModule(ctx, claimtypes.ModuleName, govtypes.ModuleName, balances); err != nil {
 		return err
 	}
 
-	// burn the coins
+	// burn the coins from the module account
 	err := bk.BurnCoins(ctx, govtypes.ModuleName, balances)
 	if err != nil {
 		return err
