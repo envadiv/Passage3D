@@ -44,10 +44,10 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper) err
 	// get airdrop claim module account
 	addr := ak.GetModuleAddress(claimtypes.ModuleName)
 
-	// get the balances from the airdrop claim module account
+	// get all balances of airdrop claim module account
 	balances := bk.GetAllBalances(ctx, addr)
 
-	// claim moudle account do not have the burner permissions
+	// claim module account do not have the burner permissions
 	// so we are sending it to the another module account and burning the tokens
 	if err := bk.SendCoinsFromModuleToModule(ctx, claimtypes.ModuleName, govtypes.ModuleName, balances); err != nil {
 		return err
