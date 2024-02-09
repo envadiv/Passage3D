@@ -11,9 +11,10 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
+	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 )
 
-const Name = "v2.3.1"
+const Name = "v2.4.0"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          Name,
@@ -40,19 +41,19 @@ func CreateUpgradeHandler(
 }
 
 func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper) error {
-	// get account address
-	addr, err := sdk.AccAddressFromBech32("pasg1emkh9v2kk03j4ccs0pnzk78e7ejq6wlz8mnn9u")
-	if err != nil {
-		return err
-	}
+	// get the module account
+	addr := ak.GetModuleAddress(claimtypes.ModuleName)
+
 	// get the balances from the account
 	balances := bk.GetAllBalances(ctx, addr)
+
 	// send the tokens to the module account
-	if err := bk.SendCoinsFromAccountToModule(ctx, addr, govtypes.ModuleName, balances); err != nil {
+	if err := bk.SendCoinsFromModuleToModule(ctx, claimtypes.ModuleName, govtypes.ModuleName, balances); err != nil {
 		return err
 	}
+
 	// burn the coins
-	err = bk.BurnCoins(ctx, govtypes.ModuleName, balances)
+	err := bk.BurnCoins(ctx, govtypes.ModuleName, balances)
 	if err != nil {
 		return err
 	}
