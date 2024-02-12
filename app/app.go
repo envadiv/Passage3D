@@ -12,7 +12,7 @@ import (
 	appparams "github.com/envadiv/Passage3D/app/params"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	"github.com/envadiv/Passage3D/app/upgrades/v2.2.0"
-
+	v3 "github.com/envadiv/Passage3D/app/upgrades/v2.4.0"
 	"github.com/envadiv/Passage3D/x/claim"
 
 	"github.com/gorilla/mux"
@@ -189,7 +189,7 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 
-	Upgrades = []upgrades.Upgrade{v2.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade}
 )
 
 var (
