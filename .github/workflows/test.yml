@@ -26,7 +26,7 @@ jobs:
         run: go test -v -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic `go list ./... | grep -v simapp`
         if: env.GIT_DIFF
       - name: Upload codecov report
-        uses: codecov/codecov-action@v3.1.1
+        uses: codecov/codecov-action@4.1.1
         with:
           file: coverage.txt
         if: env.GIT_DIFF
