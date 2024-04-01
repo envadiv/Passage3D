@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/version"
-
 	"github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -50,7 +49,6 @@ func GetCmdQueryModuleAccountBalance() *cobra.Command {
 
 			req := &types.QueryModuleAccountBalanceRequest{}
 			res, err := queryClient.ModuleAccountBalance(context.Background(), req)
-
 			if err != nil {
 				return err
 			}
@@ -80,7 +78,6 @@ func GetCmdQueryParams() *cobra.Command {
 
 			params := &types.QueryParamsRequest{}
 			res, err := queryClient.Params(context.Background(), params)
-
 			if err != nil {
 				return err
 			}
@@ -149,7 +146,7 @@ $ %s query claim claimable-for-action pasg1wuanjx7l4mjdm48p5uqarukm3aus508wxmhlj
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			_, ok := types.Action_value[args[1]]
+			_, ok := types.ActionValue[args[1]]
 			if !ok {
 				return fmt.Errorf("invalid action type: %s", args[1])
 			}

@@ -3,10 +3,9 @@ package claim
 import (
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/envadiv/Passage3D/x/claim/keeper"
 	"github.com/envadiv/Passage3D/x/claim/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

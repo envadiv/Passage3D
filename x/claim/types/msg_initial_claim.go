@@ -19,11 +19,11 @@ func NewMsgClaim(sender, action string) *MsgClaim {
 	}
 }
 
-func (msg MsgClaim) Route() string {
+func (MsgClaim) Route() string {
 	return RouterKey
 }
 
-func (msg MsgClaim) Type() string {
+func (MsgClaim) Type() string {
 	return TypeMsgClaim
 }
 

@@ -15,8 +15,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var addr1 sdk.AccAddress
-var addr2 sdk.AccAddress
+var (
+	addr1 sdk.AccAddress
+	addr2 sdk.AccAddress
+)
 
 var claimRecords []claimtypes.ClaimRecord
 
@@ -116,7 +118,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 			"query claimable-for-action amount",
 			[]string{
 				addr2.String(),
-				claimtypes.Action_name[0],
+				claimtypes.ActionName[0],
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			sdk.Coins{sdk.NewCoin(claimtypes.DefaultClaimDenom, sdk.NewInt(20))},

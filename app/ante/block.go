@@ -17,7 +17,7 @@ func NewBlockAccountDecorator() BlockAccountDecorator {
 	return BlockAccountDecorator{}
 }
 
-func (bad BlockAccountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (BlockAccountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	if simulate {
 		return next(ctx, tx, simulate)
 	}

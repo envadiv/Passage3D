@@ -1,8 +1,9 @@
 package v2
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 var NewClaimRecords = []*claimtypes.ClaimRecord{

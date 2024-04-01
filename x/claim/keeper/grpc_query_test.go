@@ -10,22 +10,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *KeeperTestSuite) TestGrpcQueryParams() {
-	grpcClient := suite.queryClient
+func (s *KeeperTestSuite) TestGrpcQueryParams() {
+	grpcClient := s.queryClient
 
 	resp, _ := grpcClient.Params(context.Background(), &types.QueryParamsRequest{})
-	suite.Require().Equal(resp.GetParams().ClaimDenom, types.DefaultClaimDenom)
+	s.Require().Equal(resp.GetParams().ClaimDenom, types.DefaultClaimDenom)
 }
 
-func (suite *KeeperTestSuite) TestGrpcQueryModuleAccountBalance() {
-	grpcClient := suite.queryClient
+func (s *KeeperTestSuite) TestGrpcQueryModuleAccountBalance() {
+	grpcClient := s.queryClient
 
 	resp, _ := grpcClient.ModuleAccountBalance(context.Background(), &types.QueryModuleAccountBalanceRequest{})
-	suite.Require().Equal(resp.ModuleAccountBalance.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(10000000))).String())
+	s.Require().Equal(resp.ModuleAccountBalance.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(10000000))).String())
 }
 
-func (suite *KeeperTestSuite) TestGrpcQueryClaimRecords() {
-	grpcClient, ctx, k := suite.queryClient, suite.ctx, suite.app.ClaimKeeper
+func (s *KeeperTestSuite) TestGrpcQueryClaimRecords() {
+	grpcClient, ctx, k := s.queryClient, s.ctx, s.app.ClaimKeeper
 	ctx = ctx.WithBlockTime(time.Now())
 
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
@@ -45,14 +45,14 @@ func (suite *KeeperTestSuite) TestGrpcQueryClaimRecords() {
 	}
 
 	err := k.SetClaimRecords(ctx, claimRecords)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	resp, err := grpcClient.ClaimRecord(context.Background(), &types.QueryClaimRecordRequest{Address: addr1.String()})
-	suite.Require().NoError(err)
-	suite.Require().Equal(resp.GetClaimRecord(), claimRecords[0])
+	s.Require().NoError(err)
+	s.Require().Equal(resp.GetClaimRecord(), claimRecords[0])
 
-	//// get claim record for action
-	//actionResp, err := grpcClient.TotalClaimable(context.Background(), &types.QueryTotalClaimableRequest{Address: addr1.String()})
-	//suite.Require().NoError(err)
-	//suite.Require().Equal(actionResp.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(100))).String())
+	// // get claim record for action
+	// actionResp, err := grpcClient.TotalClaimable(context.Background(), &types.QueryTotalClaimableRequest{Address: addr1.String()})
+	// suite.Require().NoError(err)
+	// suite.Require().Equal(actionResp.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(100))).String())
 }
