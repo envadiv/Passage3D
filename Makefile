@@ -494,11 +494,17 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
-# Run a 4-node testnet locally
-localnet-start: localnet-stop $(TESTNETDIR)
-	docker-compose up
+# Run a 4-node testnet locally after generating a statically built binary
 
-$(TESTNETDIR): build-linux
+static-build:
+	$(DOCKER) build . -t passage-image
+	$(DOCKER) create --name passage-container passage-image
+	@mkdir -p $(BUILDDIR)
+	$(DOCKER) cp passage-container:/usr/local/bin/passage $(BUILDDIR)/passage && $(DOCKER) rm passage-container
+
+localnet-start: localnet-stop $(TESTNETDIR)
+
+$(TESTNETDIR): static-build
 	$(BUILDDIR)/passage testnet \
 		--chain-id $(TESTNETCHAINID)  \
 		--keyring-backend test \
@@ -506,10 +512,12 @@ $(TESTNETDIR): build-linux
 		--node-daemon-home passage \
 		--starting-ip-address 192.168.0.2
 
+		$(DOCKER) compose up -d
+
 localnet-stop:
-	docker-compose down
+	$(DOCKER) compose down
 
 localnet-clean:
 	sudo rm -rf $(TESTNETDIR)
 
-.PHONY: localnet-start localnet-stop localnet-clean
+.PHONY: localnet-start localnet-stop localnet-clean static-build
