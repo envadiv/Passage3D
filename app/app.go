@@ -13,6 +13,7 @@ import (
 	"github.com/envadiv/Passage3D/app/upgrades"
 	"github.com/envadiv/Passage3D/app/upgrades/v2.2.0"
 	v3 "github.com/envadiv/Passage3D/app/upgrades/v2.4.0"
+	v2_5 "github.com/envadiv/Passage3D/app/upgrades/v2.5.0"
 	"github.com/envadiv/Passage3D/x/claim"
 
 	"github.com/gorilla/mux"
@@ -189,7 +190,7 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 
-	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v3.Upgrade, v2_5.Upgrade}
 )
 
 var (
@@ -266,7 +267,6 @@ func NewPassageApp(
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig, enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions, wasmOpts []wasm.Option, baseAppOptions ...func(*baseapp.BaseApp),
 ) *PassageApp {
-
 	appCodec := encodingConfig.Marshaler
 	legacyAmino := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -411,6 +411,7 @@ func NewPassageApp(
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.DistrKeeper,
+		app.IBCKeeper.ChannelKeeper, // may be replaced with IBC fee middleware
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		scopedWasmKeeper,
@@ -454,7 +455,7 @@ func NewPassageApp(
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
-	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
@@ -628,7 +629,6 @@ func NewPassageApp(
 			TxCounterStoreKey: keys[wasm.StoreKey],
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}
