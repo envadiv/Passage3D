@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -40,7 +41,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const baseDenom = "upasg"
+const (
+	baseDenom          string = "upasg"
+	defaultMinGasPrice int64  = 25
+)
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
@@ -123,9 +127,9 @@ func initAppConfig() (string, interface{}) {
 	// - if you set srvCfg.MinGasPrices non-empty, validators CAN tweak their
 	//   own app.toml to override, or use this default value.
 	//
-	// We set the min gas prices to 50.
-	// Error will be thrown if srvCfg.MinGasPrices value is less than 50.
-	srvCfg.MinGasPrices = "50" + baseDenom
+	// We set the min gas prices to defaultMinGasPrice value.
+	// Error will be thrown if srvCfg.MinGasPrices value is less than defaultMinGasPrice value.
+	srvCfg.MinGasPrices = fmt.Sprintf("%d%s", defaultMinGasPrice, baseDenom)
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
@@ -268,14 +272,15 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
 
-	// validate minimum-gas-prices value is greater than or equal to 50
+	// validate minimum-gas-prices value is greater than or equal to defaultMinGasPrice value
 	minGasPricesStr := cast.ToString(appOpts.Get(server.FlagMinGasPrices))
 	minGasPrices, err := sdk.ParseDecCoins(minGasPricesStr)
 	if err != nil {
 		panic(err)
 	}
-	if minGasPrices.AmountOf(baseDenom).LT(sdk.NewDec(50)) {
-		panic("minimum-gas-prices value in app.toml should be greater than or equal to 50" + baseDenom)
+	if minGasPrices.AmountOf(baseDenom).LT(sdk.NewDec(defaultMinGasPrice)) {
+		panic(fmt.Sprintf("minimum-gas-prices value in app.toml should be greater than or equal to %d%s",
+			defaultMinGasPrice, baseDenom))
 	}
 
 	return app.NewPassageApp(
