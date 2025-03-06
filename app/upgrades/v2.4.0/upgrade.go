@@ -8,6 +8,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
@@ -28,9 +29,9 @@ func CreateUpgradeHandler(
 	_ distribution.Keeper,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
+	_ staking.Keeper,
 	_ claim.Keeper,
 ) upgradetypes.UpgradeHandler {
-
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if err := ExecuteProposal(ctx, ak, bk); err != nil {
 			return nil, err
