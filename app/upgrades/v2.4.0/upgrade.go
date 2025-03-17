@@ -1,13 +1,17 @@
 package v2
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
@@ -25,12 +29,15 @@ var Upgrade = upgrades.Upgrade{
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	_ codec.Codec,
 	_ distribution.Keeper,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
+	_ staking.Keeper,
+	_ gov.Keeper,
+	_ authz.Keeper,
 	_ claim.Keeper,
 ) upgradetypes.UpgradeHandler {
-
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if err := ExecuteProposal(ctx, ak, bk); err != nil {
 			return nil, err

@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
@@ -29,15 +33,22 @@ var Upgrade = upgrades.Upgrade{
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	appCodec codec.Codec,
 	_ distribution.Keeper,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
+	sk staking.Keeper,
+	gk gov.Keeper,
+	azk authz.Keeper,
 	ck claim.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if err := ExecuteProposal(ctx, ak, bk, ck); err != nil {
 			return nil, err
 		}
+
+		// migrate multisig addresses
+		MigrateMultisigAddresses(ctx, appCodec, AddressMigrations, bk, ak, sk, gk, azk, ck)
 
 		return fromVM, nil
 	}
@@ -80,5 +91,6 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 	params.DurationUntilDecay = sixMonths
 
 	ck.SetParams(ctx, params)
+
 	return nil
 }

@@ -4,22 +4,28 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 )
 
-const Name = "v2.2.0"
-const upasgDenom = "upasg"
+const (
+	Name       = "v2.2.0"
+	upasgDenom = "upasg"
+)
 
 // 150,000,000 $PASG tokens
 var amount = sdk.NewCoins(sdk.NewCoin(upasgDenom, sdk.NewInt(150000000000000)))
@@ -33,12 +39,15 @@ var Upgrade = upgrades.Upgrade{
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	_ codec.Codec,
 	dk distribution.Keeper,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
+	_ staking.Keeper,
+	_ gov.Keeper,
+	_ authz.Keeper,
 	ck claim.Keeper,
 ) upgradetypes.UpgradeHandler {
-
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if err := ExecuteProposal(ctx, ak, bk, ck, dk); err != nil {
 			return nil, err
@@ -49,7 +58,7 @@ func CreateUpgradeHandler(
 }
 
 func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck claim.Keeper, dk distribution.Keeper) error {
-	var sixMonths = time.Hour * 24 * 180
+	sixMonths := time.Hour * 24 * 180
 
 	vestingAcc, err := sdk.AccAddressFromBech32("pasg105488mw9t3qtp62jhllde28v40xqxpjksjqmvx")
 	if err != nil {

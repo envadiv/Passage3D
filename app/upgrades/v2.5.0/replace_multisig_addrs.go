@@ -1,10 +1,9 @@
 package v2_5
 
 import (
-	"context"
 	"fmt"
-	"os"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pageQuery "github.com/cosmos/cosmos-sdk/types/query"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -13,32 +12,31 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
-	"github.com/gogo/protobuf/codec"
 )
 
 type AddressMigration struct {
-	OldAddress string             `json:"old_address"`
-	NewAccount authtypes.AccountI `json:"new_account"`
+	OldAddress string `json:"old_address"`
+	NewAddress string `json:"new_address"`
 }
+
+type AddressMap map[string]string
 
 func MigrateMultisigAddresses(
 	ctx sdk.Context,
 	appCodec codec.Codec,
-	dk distribution.Keeper,
+	migrations []AddressMigration,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
 	sk staking.Keeper,
+	gk gov.Keeper,
 	azk authzkeeper.Keeper,
 	ck claim.Keeper,
 ) error {
-	migrations, err := LoadAddressMigrations(appCodec, "migrations.json")
-	if err != nil {
-		return err
-	}
+	addressMap := AddressMap{}
 
 	for _, m := range migrations {
 		oldAddr, err := sdk.AccAddressFromBech32(m.OldAddress)
@@ -51,10 +49,13 @@ func MigrateMultisigAddresses(
 			return fmt.Errorf("old account %s not found", m.OldAddress)
 		}
 
-		newAccount := m.NewAccount
-		newAddr := newAccount.GetAddress()
+		newAddr, err := sdk.AccAddressFromBech32(m.NewAddress)
+		if err != nil {
+			return fmt.Errorf("invalid bech32 new address: %s, error: %w", m.NewAddress, err)
+		}
+		addressMap[m.OldAddress] = newAddr.String()
 
-		if err := migrateAccount(ctx, ak, oldAccount, newAccount); err != nil {
+		if err := migrateAccount(ctx, appCodec, ak, oldAccount, newAddr); err != nil {
 			return fmt.Errorf("failed to migrate account: %w", err)
 		}
 
@@ -72,33 +73,22 @@ func MigrateMultisigAddresses(
 		}
 	}
 
+	// migrate gov votes
+	migrateGovVotes(ctx, gk, addressMap)
+
 	return nil
 }
 
-func LoadAddressMigrations(appCodec codec.Codec, filePath string) ([]AddressMigration, error) {
-	// Read the JSON file
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read migration file: %w", err)
-	}
-
-	// Unmarshal into slice of AddressMigration
-	var migrations []AddressMigration
-	if err := appCodec.Unmarshal(data, &migrations); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal migrations: %w", err)
-	}
-
-	return migrations, nil
-}
-
 // Migrate account information based on type
-func migrateAccount(ctx sdk.Context, ak auth.AccountKeeper, oldAccount, newAccount authtypes.AccountI) error {
+func migrateAccount(ctx sdk.Context, appCodec codec.Codec, ak auth.AccountKeeper, oldAccount authtypes.AccountI,
+	newAddr sdk.AccAddress,
+) error {
 	switch oldAcc := oldAccount.(type) {
 	case *vestingtypes.PeriodicVestingAccount:
-		return migrateVestingAccount(ctx, ak, oldAcc, newAccount)
+		return migrateVestingAccount(ctx, appCodec, ak, oldAcc, newAddr)
 
 	case *authtypes.BaseAccount:
-		return migrateBaseAccount(ctx, ak, newAccount)
+		return migrateBaseAccount(ctx, ak, newAddr)
 
 	default:
 		return fmt.Errorf("not supported account type for upgrade")
@@ -106,30 +96,36 @@ func migrateAccount(ctx sdk.Context, ak auth.AccountKeeper, oldAccount, newAccou
 }
 
 // Migrate vesting account
-func migrateVestingAccount(ctx sdk.Context, ak auth.AccountKeeper, oldAcc *vestingtypes.PeriodicVestingAccount, newAccount authtypes.AccountI) error {
-	vestingPeriods := oldAcc.VestingPeriods
+func migrateVestingAccount(ctx sdk.Context, appCodec codec.Codec, ak auth.AccountKeeper, oldAcc *vestingtypes.PeriodicVestingAccount,
+	newAddr sdk.AccAddress,
+) error {
+	// copy old account to new vesting account
+	accBytes, err := appCodec.Marshal(oldAcc)
+	if err != nil {
+		return err
+	}
 
-	// Unlock old vesting periods
+	var newVestingAccount vestingtypes.PeriodicVestingAccount
+	if err := appCodec.Unmarshal(accBytes, &newVestingAccount); err != nil {
+		return err
+	}
+
+	// update base account details
+	newVestingAccount.BaseAccount = authtypes.NewBaseAccountWithAddress(newAddr)
+	ak.SetAccount(ctx, &newVestingAccount)
+
+	// Clear old account's vesting periods
 	for i := range oldAcc.VestingPeriods {
 		oldAcc.VestingPeriods[i].Length = 0
 	}
 	ak.SetAccount(ctx, oldAcc)
 
-	// Create new vesting account with old vesting periods
-	newVestingAccount := vestingtypes.NewPeriodicVestingAccount(
-		authtypes.NewBaseAccount(newAccount.GetAddress(), newAccount.GetPubKey(),
-			newAccount.GetAccountNumber(), newAccount.GetSequence()),
-		oldAcc.OriginalVesting, oldAcc.StartTime, vestingPeriods,
-	)
-	ak.SetAccount(ctx, newVestingAccount)
-
 	return nil
 }
 
 // Migrate base account
-func migrateBaseAccount(ctx sdk.Context, ak auth.AccountKeeper, newAccount authtypes.AccountI) error {
-	newBaseAcc := authtypes.NewBaseAccount(newAccount.GetAddress(), newAccount.GetPubKey(),
-		newAccount.GetAccountNumber(), newAccount.GetSequence())
+func migrateBaseAccount(ctx sdk.Context, ak auth.AccountKeeper, newAddr sdk.AccAddress) error {
+	newBaseAcc := authtypes.NewBaseAccountWithAddress(newAddr)
 	ak.SetAccount(ctx, newBaseAcc)
 	return nil
 }
@@ -186,7 +182,8 @@ func migrateAuthorizations(ctx sdk.Context, azk authzkeeper.Keeper, oldAddress, 
 	var nextKey []byte
 
 	for {
-		resp, err := azk.GranterGrants(context.Background(), &authz.QueryGranterGrantsRequest{
+		goCtx := sdk.WrapSDKContext(ctx)
+		resp, err := azk.GranterGrants(goCtx, &authz.QueryGranterGrantsRequest{
 			Granter: oldAddress.String(),
 			Pagination: &pageQuery.PageRequest{
 				Limit: 100,
@@ -236,4 +233,17 @@ func migrateAuthorizations(ctx sdk.Context, azk authzkeeper.Keeper, oldAddress, 
 func migrateBalances(ctx sdk.Context, bk bank.Keeper, oldAddr, newAddr sdk.AccAddress) error {
 	spendable := bk.SpendableCoins(ctx, oldAddr)
 	return bk.SendCoins(ctx, oldAddr, newAddr, spendable)
+}
+
+// Migrate gov votes
+func migrateGovVotes(ctx sdk.Context, gk gov.Keeper, addressMap AddressMap) {
+	votes := gk.GetAllVotes(ctx)
+
+	for _, vote := range votes {
+		newAddr, found := addressMap[vote.Voter]
+		if found {
+			vote.Voter = newAddr
+			gk.SetVote(ctx, vote)
+		}
+	}
 }
