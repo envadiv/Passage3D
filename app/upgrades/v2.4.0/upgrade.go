@@ -9,6 +9,7 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -36,6 +37,7 @@ func CreateUpgradeHandler(
 	_ staking.Keeper,
 	_ gov.Keeper,
 	_ authz.Keeper,
+	_ feegrant.Keeper,
 	_ claim.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {

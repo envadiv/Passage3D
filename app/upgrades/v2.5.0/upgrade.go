@@ -12,6 +12,7 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -40,6 +41,7 @@ func CreateUpgradeHandler(
 	sk staking.Keeper,
 	gk gov.Keeper,
 	azk authz.Keeper,
+	fk feegrant.Keeper,
 	ck claim.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
@@ -48,7 +50,7 @@ func CreateUpgradeHandler(
 		}
 
 		// migrate multisig addresses
-		MigrateMultisigAddresses(ctx, appCodec, AddressMigrations, bk, ak, sk, gk, azk, ck)
+		MigrateMultisigAddresses(ctx, appCodec, AddressMigrations, bk, ak, sk, gk, azk, fk, ck)
 
 		return fromVM, nil
 	}

@@ -12,6 +12,8 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -25,6 +27,11 @@ type AddressMigration struct {
 
 type AddressMap map[string]string
 
+type OldDelegation struct {
+	Delegation       stakingtypes.Delegation
+	DelegationAmount sdk.Int
+}
+
 func MigrateMultisigAddresses(
 	ctx sdk.Context,
 	appCodec codec.Codec,
@@ -34,6 +41,7 @@ func MigrateMultisigAddresses(
 	sk staking.Keeper,
 	gk gov.Keeper,
 	azk authzkeeper.Keeper,
+	fk feegrantkeeper.Keeper,
 	ck claim.Keeper,
 ) error {
 	addressMap := AddressMap{}
@@ -55,19 +63,42 @@ func MigrateMultisigAddresses(
 		}
 		addressMap[m.OldAddress] = newAddr.String()
 
+		fmt.Println("Initial Spendable balance......", bk.SpendableCoins(ctx, oldAddr))
+
+		fmt.Println("Initial Accounts.......", ak.GetAccount(ctx, oldAddr))
+
 		if err := migrateAccount(ctx, appCodec, ak, oldAccount, newAddr); err != nil {
 			return fmt.Errorf("failed to migrate account: %w", err)
 		}
 
-		if err := migrateDelegations(ctx, sk, oldAddr, newAddr); err != nil {
+		fmt.Println("Accounts.......", ak.GetAccount(ctx, oldAddr), "New...", ak.GetAccount(ctx, newAddr))
+
+		// unbond old delegation
+		delegations, err := unbondOldDelegations(ctx, bk, sk, oldAddr)
+		if err != nil {
+			return fmt.Errorf("failed to unbond old delegations: %w", err)
+		}
+
+		// send spendable balance from old account to new account
+		if err := migrateBalances(ctx, bk, oldAddr, newAddr); err != nil {
+			return fmt.Errorf("failed to migrate balances: %w", err)
+		}
+
+		if err := migrateDelegations(ctx, bk, sk, oldAddr, newAddr, delegations); err != nil {
 			return fmt.Errorf("failed to migrate delegations: %w", err)
 		}
+
+		fmt.Println("Accounts Last.......", ak.GetAccount(ctx, oldAddr), "New...", ak.GetAccount(ctx, newAddr))
 
 		if err := migrateAuthorizations(ctx, azk, oldAddr, newAddr); err != nil {
 			return fmt.Errorf("failed to migrate authorizations: %w", err)
 		}
 
-		// send spendable balance from old account to new account
+		if err := migrateFeeGrants(ctx, fk, oldAddr, newAddr); err != nil {
+			return fmt.Errorf("failed to migrate feegrants: %w", err)
+		}
+
+		// send again spendable balance from old account to new account to avoid missing balances
 		if err := migrateBalances(ctx, bk, oldAddr, newAddr); err != nil {
 			return fmt.Errorf("failed to migrate balances: %w", err)
 		}
@@ -112,6 +143,8 @@ func migrateVestingAccount(ctx sdk.Context, appCodec codec.Codec, ak auth.Accoun
 
 	// update base account details
 	newVestingAccount.BaseAccount = authtypes.NewBaseAccountWithAddress(newAddr)
+	newVestingAccount.DelegatedFree = sdk.NewCoins()
+	newVestingAccount.DelegatedVesting = sdk.NewCoins()
 	ak.SetAccount(ctx, &newVestingAccount)
 
 	// Clear old account's vesting periods
@@ -130,25 +163,57 @@ func migrateBaseAccount(ctx sdk.Context, ak auth.AccountKeeper, newAddr sdk.AccA
 	return nil
 }
 
-// Migrate delegations,redelegations and unbonding delegations
-func migrateDelegations(ctx sdk.Context, sk staking.Keeper, oldAddr, newAddr sdk.AccAddress) error {
-	// update delegations, unbond and delegate from new address
+func unbondOldDelegations(ctx sdk.Context, bk bank.Keeper, sk staking.Keeper,
+	oldAddr sdk.AccAddress,
+) ([]OldDelegation, error) {
 	delegations := sk.GetAllDelegatorDelegations(ctx, oldAddr)
-	for _, delegation := range delegations {
-		validator, found := sk.GetValidator(ctx, delegation.GetValidatorAddr())
-		if !found {
-			return fmt.Errorf("validator not found: %s from delegation %s", delegation.ValidatorAddress, delegation.DelegatorAddress)
-		}
+	oldDelegations := []OldDelegation{}
+	bondDenom := sk.GetParams(ctx).BondDenom
+	for i, delegation := range delegations {
+		fmt.Println("Balance before......", bk.SpendableCoins(ctx, oldAddr))
+		fmt.Println("Old Delegations...........", i, delegation)
 
 		amount, err := sk.Unbond(ctx, oldAddr, delegation.GetValidatorAddr(), delegation.GetShares())
 		if err != nil {
-			return err
+			return []OldDelegation{}, err
 		}
 
-		_, err = sk.Delegate(ctx, newAddr, amount, validator.GetStatus(), validator, false)
+		if err := bk.UndelegateCoinsFromModuleToAccount(ctx, stakingtypes.BondedPoolName, oldAddr,
+			sdk.NewCoins(sdk.NewCoin(bondDenom, amount))); err != nil {
+			return []OldDelegation{}, err
+		}
+
+		oldDelegations = append(oldDelegations, OldDelegation{
+			Delegation: delegation, DelegationAmount: amount,
+		})
+
+		fmt.Println("Balance After Old......", amount, bk.SpendableCoins(ctx, oldAddr))
+	}
+
+	return oldDelegations, nil
+}
+
+// Migrate delegations,redelegations and unbonding delegations
+func migrateDelegations(ctx sdk.Context, bk bank.Keeper, sk staking.Keeper, oldAddr, newAddr sdk.AccAddress,
+	delegations []OldDelegation,
+) error {
+	// bondDenom := sk.GetParams(ctx).BondDenom
+	// update delegations, unbond and delegate from new address
+	for i, delegation := range delegations {
+		fmt.Println("New Balance before......", bk.SpendableCoins(ctx, newAddr))
+		fmt.Println("Delegations...........", i, delegation)
+		validator, found := sk.GetValidator(ctx, delegation.Delegation.GetValidatorAddr())
+		if !found {
+			return fmt.Errorf("validator not found: %s from delegation %s",
+				delegation.Delegation.ValidatorAddress, delegation.Delegation.DelegatorAddress)
+		}
+
+		_, err := sk.Delegate(ctx, newAddr, delegation.DelegationAmount, stakingtypes.Unbonded, validator, true)
 		if err != nil {
 			return err
 		}
+
+		fmt.Println("Balance After......", bk.SpendableCoins(ctx, newAddr))
 	}
 
 	// update existing unbonding delegations
@@ -229,10 +294,61 @@ func migrateAuthorizations(ctx sdk.Context, azk authzkeeper.Keeper, oldAddress, 
 	return nil
 }
 
+// Migrate fee grants
+func migrateFeeGrants(ctx sdk.Context, fk feegrantkeeper.Keeper, oldAddress, newAddress sdk.AccAddress) error {
+	var allGrants []*feegrant.Grant
+	var nextKey []byte
+
+	for {
+		goCtx := sdk.WrapSDKContext(ctx)
+		resp, err := fk.AllowancesByGranter(goCtx, &feegrant.QueryAllowancesByGranterRequest{
+			Granter: oldAddress.String(),
+			Pagination: &pageQuery.PageRequest{
+				Limit: 100,
+				Key:   nextKey,
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		allGrants = append(allGrants, resp.Allowances...)
+		nextKey = resp.Pagination.NextKey
+
+		// If nextKey is nil, we've retrieved all pages
+		if nextKey == nil {
+			break
+		}
+	}
+
+	// Process all grants
+	for _, grant := range allGrants {
+		granteeAddr, err := sdk.AccAddressFromBech32(grant.Grantee)
+		if err != nil {
+			return fmt.Errorf("invalid bech32 grantee address: %s, error: %w", grant.Grantee, err)
+		}
+
+		g, ok := grant.Allowance.GetCachedValue().(feegrant.FeeAllowanceI)
+		if !ok {
+			return fmt.Errorf("invalid fee grant for granter: %s, grantee: %s", grant.Granter, grant.Grantee)
+		}
+
+		// Create new grant with the updated address
+		if err := fk.GrantAllowance(ctx, newAddress, granteeAddr, g); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Migrate balances
 func migrateBalances(ctx sdk.Context, bk bank.Keeper, oldAddr, newAddr sdk.AccAddress) error {
 	spendable := bk.SpendableCoins(ctx, oldAddr)
-	return bk.SendCoins(ctx, oldAddr, newAddr, spendable)
+	if err := bk.SendCoins(ctx, oldAddr, newAddr, spendable); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Migrate gov votes

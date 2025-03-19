@@ -669,6 +669,7 @@ func (app *PassageApp) setupUpgradeHandlers() {
 				app.StakingKeeper,
 				app.GovKeeper,
 				app.AuthzKeeper,
+				app.FeeGrantKeeper,
 				app.ClaimKeeper,
 			),
 		)

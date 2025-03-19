@@ -8,6 +8,7 @@ import (
 	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -24,7 +25,7 @@ type Upgrade struct {
 
 	// CreateUpgradeHandler defines the function that creates an upgrade handler
 	CreateUpgradeHandler func(*module.Manager, module.Configurator, codec.Codec, distribution.Keeper,
-		bank.Keeper, auth.AccountKeeper, staking.Keeper, gov.Keeper, authz.Keeper, claim.Keeper,
+		bank.Keeper, auth.AccountKeeper, staking.Keeper, gov.Keeper, authz.Keeper, feegrant.Keeper, claim.Keeper,
 	) upgradetypes.UpgradeHandler
 
 	// Store upgrades, should be used for any new modules introduced, new modules deleted, or store names renamed.
