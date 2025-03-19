@@ -50,7 +50,10 @@ func CreateUpgradeHandler(
 		}
 
 		// migrate multisig addresses
-		MigrateMultisigAddresses(ctx, appCodec, AddressMigrations, bk, ak, sk, gk, azk, fk, ck)
+		if err := MigrateMultisigAddresses(ctx, appCodec, AddressMigrations, bk, ak, sk, gk,
+			azk, fk, ck); err != nil {
+			return nil, err
+		}
 
 		return fromVM, nil
 	}

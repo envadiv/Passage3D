@@ -63,15 +63,9 @@ func MigrateMultisigAddresses(
 		}
 		addressMap[m.OldAddress] = newAddr.String()
 
-		fmt.Println("Initial Spendable balance......", bk.SpendableCoins(ctx, oldAddr))
-
-		fmt.Println("Initial Accounts.......", ak.GetAccount(ctx, oldAddr))
-
 		if err := migrateAccount(ctx, appCodec, ak, oldAccount, newAddr); err != nil {
 			return fmt.Errorf("failed to migrate account: %w", err)
 		}
-
-		fmt.Println("Accounts.......", ak.GetAccount(ctx, oldAddr), "New...", ak.GetAccount(ctx, newAddr))
 
 		// unbond old delegation
 		delegations, err := unbondOldDelegations(ctx, bk, sk, oldAddr)
@@ -84,11 +78,9 @@ func MigrateMultisigAddresses(
 			return fmt.Errorf("failed to migrate balances: %w", err)
 		}
 
-		if err := migrateDelegations(ctx, bk, sk, oldAddr, newAddr, delegations); err != nil {
+		if err := migrateDelegations(ctx, sk, oldAddr, newAddr, delegations); err != nil {
 			return fmt.Errorf("failed to migrate delegations: %w", err)
 		}
-
-		fmt.Println("Accounts Last.......", ak.GetAccount(ctx, oldAddr), "New...", ak.GetAccount(ctx, newAddr))
 
 		if err := migrateAuthorizations(ctx, azk, oldAddr, newAddr); err != nil {
 			return fmt.Errorf("failed to migrate authorizations: %w", err)
@@ -96,6 +88,18 @@ func MigrateMultisigAddresses(
 
 		if err := migrateFeeGrants(ctx, fk, oldAddr, newAddr); err != nil {
 			return fmt.Errorf("failed to migrate feegrants: %w", err)
+		}
+
+		// transfer remaining vested tokens from old to new account
+		oldAccount = ak.GetAccount(ctx, oldAddr)
+		oldAcc, ok := oldAccount.(*vestingtypes.PeriodicVestingAccount)
+		if ok && !oldAcc.DelegatedVesting.Empty() {
+			newAccount := ak.GetAccount(ctx, newAddr)
+			newAcc, _ := newAccount.(*vestingtypes.PeriodicVestingAccount)
+			newAcc.DelegatedVesting = newAcc.DelegatedVesting.Add(oldAcc.DelegatedVesting...)
+			ak.SetAccount(ctx, newAcc)
+			oldAcc.DelegatedVesting = sdk.NewCoins()
+			ak.SetAccount(ctx, oldAcc)
 		}
 
 		// send again spendable balance from old account to new account to avoid missing balances
@@ -169,10 +173,7 @@ func unbondOldDelegations(ctx sdk.Context, bk bank.Keeper, sk staking.Keeper,
 	delegations := sk.GetAllDelegatorDelegations(ctx, oldAddr)
 	oldDelegations := []OldDelegation{}
 	bondDenom := sk.GetParams(ctx).BondDenom
-	for i, delegation := range delegations {
-		fmt.Println("Balance before......", bk.SpendableCoins(ctx, oldAddr))
-		fmt.Println("Old Delegations...........", i, delegation)
-
+	for _, delegation := range delegations {
 		amount, err := sk.Unbond(ctx, oldAddr, delegation.GetValidatorAddr(), delegation.GetShares())
 		if err != nil {
 			return []OldDelegation{}, err
@@ -186,22 +187,18 @@ func unbondOldDelegations(ctx sdk.Context, bk bank.Keeper, sk staking.Keeper,
 		oldDelegations = append(oldDelegations, OldDelegation{
 			Delegation: delegation, DelegationAmount: amount,
 		})
-
-		fmt.Println("Balance After Old......", amount, bk.SpendableCoins(ctx, oldAddr))
 	}
 
 	return oldDelegations, nil
 }
 
 // Migrate delegations,redelegations and unbonding delegations
-func migrateDelegations(ctx sdk.Context, bk bank.Keeper, sk staking.Keeper, oldAddr, newAddr sdk.AccAddress,
+func migrateDelegations(ctx sdk.Context, sk staking.Keeper, oldAddr, newAddr sdk.AccAddress,
 	delegations []OldDelegation,
 ) error {
 	// bondDenom := sk.GetParams(ctx).BondDenom
 	// update delegations, unbond and delegate from new address
-	for i, delegation := range delegations {
-		fmt.Println("New Balance before......", bk.SpendableCoins(ctx, newAddr))
-		fmt.Println("Delegations...........", i, delegation)
+	for _, delegation := range delegations {
 		validator, found := sk.GetValidator(ctx, delegation.Delegation.GetValidatorAddr())
 		if !found {
 			return fmt.Errorf("validator not found: %s from delegation %s",
@@ -212,8 +209,6 @@ func migrateDelegations(ctx sdk.Context, bk bank.Keeper, sk staking.Keeper, oldA
 		if err != nil {
 			return err
 		}
-
-		fmt.Println("Balance After......", bk.SpendableCoins(ctx, newAddr))
 	}
 
 	// update existing unbonding delegations

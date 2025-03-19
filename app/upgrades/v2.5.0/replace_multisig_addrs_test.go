@@ -16,6 +16,7 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
@@ -115,9 +116,17 @@ func (s *UpgradeTestSuite) TestMigrateMultisigAddresses() {
 	validator2, err := stakingtypes.NewValidator(sdk.ValAddress(valPubKey.Address()), valPubKey, stakingtypes.Description{})
 	require.NoError(s.T(), err)
 	validator2.Status = stakingtypes.Bonded
-	validator2.Tokens = sdk.NewInt(1000000)
 	s.app.StakingKeeper.SetValidator(s.ctx, validator2)
 	s.app.StakingKeeper.AfterValidatorCreated(s.ctx, validator2.GetOperator())
+	amt := sdk.NewInt(1000000)
+	val2Addr := sdk.AccAddress(valPubKey.Address())
+	require.NoError(s.T(), s.app.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName,
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))))
+	require.NoError(s.T(), s.app.BankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName,
+		val2Addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))))
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, val2Addr, amt,
+		stakingtypes.Unbonded, validator2, true)
+	require.NoError(s.T(), err)
 
 	// Get the old vesting account before migration
 	oldAcc := s.app.AccountKeeper.GetAccount(s.ctx, s.oldAddr)
