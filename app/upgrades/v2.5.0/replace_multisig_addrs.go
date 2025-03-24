@@ -78,7 +78,7 @@ func MigrateMultisigAddresses(
 			return fmt.Errorf("failed to migrate balances: %w", err)
 		}
 
-		if err := migrateDelegations(ctx, sk, oldAddr, newAddr, delegations); err != nil {
+		if err := migrateDelegations(ctx, sk, newAddr, delegations); err != nil {
 			return fmt.Errorf("failed to migrate delegations: %w", err)
 		}
 
@@ -170,33 +170,73 @@ func migrateBaseAccount(ctx sdk.Context, ak auth.AccountKeeper, newAddr sdk.AccA
 func unbondOldDelegations(ctx sdk.Context, bk bank.Keeper, sk staking.Keeper,
 	oldAddr sdk.AccAddress,
 ) ([]OldDelegation, error) {
+	// complete all existing redelegations
+	sk.IterateDelegatorRedelegations(ctx, oldAddr, func(red stakingtypes.Redelegation) (stop bool) {
+		// set all entry completionTime to now so we can complete re-delegation
+		redelegationSrc, _ := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
+		redelegationDst, _ := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
+
+		blockTime := ctx.BlockTime()
+		for i := range red.Entries {
+			red.Entries[i].CompletionTime = blockTime
+		}
+		sk.SetRedelegation(ctx, red)
+		_, err := sk.CompleteRedelegation(ctx, oldAddr, redelegationSrc, redelegationDst)
+		if err != nil {
+			panic(err)
+		}
+
+		return false
+	})
+
 	delegations := sk.GetAllDelegatorDelegations(ctx, oldAddr)
 	oldDelegations := []OldDelegation{}
-	bondDenom := sk.GetParams(ctx).BondDenom
 	for _, delegation := range delegations {
-		amount, err := sk.Unbond(ctx, oldAddr, delegation.GetValidatorAddr(), delegation.GetShares())
+		valAddr := delegation.GetValidatorAddr()
+		shares := delegation.GetShares()
+
+		validator, found := sk.GetValidator(ctx, valAddr)
+		if !found {
+			return oldDelegations, fmt.Errorf("validator not found: %s from delegation %s",
+				delegation.ValidatorAddress, delegation.DelegatorAddress)
+		}
+
+		delegatedAmount := validator.TokensFromShares(shares).TruncateInt()
+
+		_, err := sk.Undelegate(ctx, oldAddr, valAddr, shares)
 		if err != nil {
 			return []OldDelegation{}, err
 		}
 
-		if err := bk.UndelegateCoinsFromModuleToAccount(ctx, stakingtypes.BondedPoolName, oldAddr,
-			sdk.NewCoins(sdk.NewCoin(bondDenom, amount))); err != nil {
-			return []OldDelegation{}, err
+		oldDelegations = append(oldDelegations, OldDelegation{
+			Delegation: delegation, DelegationAmount: delegatedAmount,
+		})
+	}
+
+	// complete all existing unbonding delegations
+	undelegations := sk.GetAllUnbondingDelegations(ctx, oldAddr)
+	for _, ubd := range undelegations {
+		validatorValAddr, _ := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+
+		blockTime := ctx.BlockTime()
+		for i := range ubd.Entries {
+			ubd.Entries[i].CompletionTime = blockTime
 		}
 
-		oldDelegations = append(oldDelegations, OldDelegation{
-			Delegation: delegation, DelegationAmount: amount,
-		})
+		sk.SetUnbondingDelegation(ctx, ubd)
+		_, err := sk.CompleteUnbonding(ctx, oldAddr, validatorValAddr)
+		if err != nil {
+			return oldDelegations, err
+		}
 	}
 
 	return oldDelegations, nil
 }
 
 // Migrate delegations,redelegations and unbonding delegations
-func migrateDelegations(ctx sdk.Context, sk staking.Keeper, oldAddr, newAddr sdk.AccAddress,
+func migrateDelegations(ctx sdk.Context, sk staking.Keeper, newAddr sdk.AccAddress,
 	delegations []OldDelegation,
 ) error {
-	// bondDenom := sk.GetParams(ctx).BondDenom
 	// update delegations, unbond and delegate from new address
 	for _, delegation := range delegations {
 		validator, found := sk.GetValidator(ctx, delegation.Delegation.GetValidatorAddr())
@@ -210,28 +250,6 @@ func migrateDelegations(ctx sdk.Context, sk staking.Keeper, oldAddr, newAddr sdk
 			return err
 		}
 	}
-
-	// update existing unbonding delegations
-	sk.IterateDelegatorUnbondingDelegations(ctx, oldAddr, func(ubd stakingtypes.UnbondingDelegation) (stop bool) {
-		sk.RemoveUnbondingDelegation(ctx, ubd)
-		ubd.DelegatorAddress = newAddr.String()
-		sk.SetUnbondingDelegation(ctx, ubd)
-		for _, entry := range ubd.Entries {
-			sk.InsertUBDQueue(ctx, ubd, entry.CompletionTime)
-		}
-		return false
-	})
-
-	// update existing redelegations
-	sk.IterateDelegatorRedelegations(ctx, oldAddr, func(red stakingtypes.Redelegation) (stop bool) {
-		sk.RemoveRedelegation(ctx, red)
-		red.DelegatorAddress = newAddr.String()
-		sk.SetRedelegation(ctx, red)
-		for _, entry := range red.Entries {
-			sk.InsertRedelegationQueue(ctx, red, entry.CompletionTime)
-		}
-		return false
-	})
 
 	return nil
 }

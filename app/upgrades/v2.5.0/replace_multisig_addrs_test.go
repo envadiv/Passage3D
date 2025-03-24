@@ -5,6 +5,7 @@ import (
 	"time"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -19,8 +20,11 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	app "github.com/envadiv/Passage3D/app"
 	v2_5 "github.com/envadiv/Passage3D/app/upgrades/v2.5.0"
 )
@@ -103,6 +107,24 @@ func (s *UpgradeTestSuite) SetupTest() {
 			NewAddress: s.newAddr.String(),
 		},
 	}
+}
+
+func (s *UpgradeTestSuite) checkInvariants() {
+	// Check supply invariants
+	// totalSupply := s.app.BankKeeper.GetSupply(s.ctx, sdk.DefaultBondDenom)
+	// bondedTokens := s.app.StakingKeeper.TotalBondedTokens(s.ctx)
+	// notBondedTokens := s.app.BankKeeper.GetAllBalances(s.ctx, s.app.StakingKeeper.GetNotBondedPool(s.ctx).GetAddress())
+	// require.True(s.T(), totalSupply.Amount.Equal(bondedTokens.Add(notBondedTokens.AmountOf(sdk.DefaultBondDenom))))
+
+	// Check module invariants
+	res, stop := bankkeeper.AllInvariants(s.app.BankKeeper)(s.ctx)
+	assert.False(s.T(), stop, res)
+
+	res, stop = stakingkeeper.AllInvariants(s.app.StakingKeeper)(s.ctx)
+	assert.False(s.T(), stop, res)
+
+	res, stop = distributionkeeper.AllInvariants(s.app.DistrKeeper)(s.ctx)
+	assert.False(s.T(), stop, res)
 }
 
 func (s *UpgradeTestSuite) TestMigrateMultisigAddresses() {
@@ -200,7 +222,12 @@ func (s *UpgradeTestSuite) TestMigrateMultisigAddresses() {
 
 	// get staking module accounts balances
 	oldBondedPoolBal := s.app.BankKeeper.GetAllBalances(s.ctx, s.app.StakingKeeper.GetBondedPool(s.ctx).GetAddress())
-	oldNonBondedPoolBal := s.app.BankKeeper.GetAllBalances(s.ctx, s.app.StakingKeeper.GetNotBondedPool(s.ctx).GetAddress())
+
+	// Check invariants before migration
+	s.checkInvariants()
+
+	// Store total supply before migration
+	totalSupplyBefore := s.app.BankKeeper.GetSupply(s.ctx, sdk.DefaultBondDenom)
 
 	// Perform migration
 	err = v2_5.MigrateMultisigAddresses(
@@ -216,6 +243,13 @@ func (s *UpgradeTestSuite) TestMigrateMultisigAddresses() {
 		s.app.ClaimKeeper,
 	)
 	require.NoError(s.T(), err)
+
+	// Check invariants after migration
+	s.checkInvariants()
+
+	// Verify total supply hasn't changed
+	totalSupplyAfter := s.app.BankKeeper.GetSupply(s.ctx, sdk.DefaultBondDenom)
+	require.Equal(s.T(), totalSupplyBefore, totalSupplyAfter)
 
 	// Verify account migration
 	newAcc := s.app.AccountKeeper.GetAccount(s.ctx, s.newAddr)
@@ -240,6 +274,9 @@ func (s *UpgradeTestSuite) TestMigrateMultisigAddresses() {
 	// Verify balances
 	// Check total balances
 	actualBalance := s.app.BankKeeper.GetAllBalances(s.ctx, s.newAddr)
+	// as removing unbond delegations, related amount should be added to balance
+	// so update expected balance to include unbond amount
+	oldTotalBalance = oldTotalBalance.Add(sdk.NewCoin(sdk.DefaultBondDenom, unbondAmt))
 	require.Equal(s.T(), oldTotalBalance, actualBalance)
 
 	// Check spendable balances
@@ -284,23 +321,19 @@ func (s *UpgradeTestSuite) TestMigrateMultisigAddresses() {
 	newBondedPoolBal := s.app.BankKeeper.GetAllBalances(s.ctx, s.app.StakingKeeper.GetBondedPool(s.ctx).GetAddress())
 	newNonBondedPoolBal := s.app.BankKeeper.GetAllBalances(s.ctx, s.app.StakingKeeper.GetNotBondedPool(s.ctx).GetAddress())
 	require.Equal(s.T(), oldBondedPoolBal, newBondedPoolBal)
-	require.Equal(s.T(), oldNonBondedPoolBal, newNonBondedPoolBal)
+	// non bonded pool should be empty as removing all undelegations of old address
+	require.Empty(s.T(), newNonBondedPoolBal)
 
 	// Verify unbonding delegation migration
 	newUnbonding := s.app.StakingKeeper.GetAllUnbondingDelegations(s.ctx, s.newAddr)
-	require.Len(s.T(), newUnbonding, 1)
-	require.Equal(s.T(), oldUnbonding[0].ValidatorAddress, newUnbonding[0].ValidatorAddress)
-	require.Equal(s.T(), oldUnbonding[0].Entries, newUnbonding[0].Entries)
+	require.Empty(s.T(), newUnbonding)
 
 	oldUnbonding = s.app.StakingKeeper.GetAllUnbondingDelegations(s.ctx, s.oldAddr)
 	require.Empty(s.T(), oldUnbonding)
 
 	// Verify redelegation migration
 	newRedelegations := s.app.StakingKeeper.GetAllRedelegations(s.ctx, s.newAddr, validator.GetOperator(), validator2.GetOperator())
-	require.Len(s.T(), newRedelegations, 1)
-	require.Equal(s.T(), oldRedelegations[0].ValidatorSrcAddress, newRedelegations[0].ValidatorSrcAddress)
-	require.Equal(s.T(), oldRedelegations[0].ValidatorDstAddress, newRedelegations[0].ValidatorDstAddress)
-	require.Equal(s.T(), oldRedelegations[0].Entries, newRedelegations[0].Entries)
+	require.Empty(s.T(), newRedelegations)
 
 	oldRedelegations = s.app.StakingKeeper.GetAllRedelegations(s.ctx, s.oldAddr, validator.GetOperator(), validator2.GetOperator())
 	require.Empty(s.T(), oldRedelegations)
