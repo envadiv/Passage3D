@@ -155,6 +155,8 @@ func migrateVestingAccount(ctx sdk.Context, appCodec codec.Codec, ak auth.Accoun
 	for i := range oldAcc.VestingPeriods {
 		oldAcc.VestingPeriods[i].Length = 0
 	}
+	oldAcc.StartTime = ctx.BlockTime().Unix()
+	oldAcc.EndTime = ctx.BlockTime().Unix()
 	ak.SetAccount(ctx, oldAcc)
 
 	return nil
