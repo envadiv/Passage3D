@@ -777,13 +777,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg13ea8m5yztfvu709f30yv7xegrzcwd6ajfe04k2",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(9324000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1cd9j0spak8lh5m76pqjfh7lprurgqlwfvh7nu2",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(6993000000)),
@@ -794,13 +787,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1kshlyr257twv93ma4dwr6s636p5e0vxn0sdra3",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(9324000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg14m86v2jcd6mxky28r7v779y28de950hfnl0mv2",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(6993000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -892,13 +878,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg18ruuxmdtvfpnrv5mqgwftj3qc9llt0d8j76ju7",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(4662000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg13lsr96lk8fvsearqklyzg7a7gzleujvjp450av",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(9324000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -1018,13 +997,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1s9qddt4kgfzdt23zd30r0tg20wggeydrw5cugx",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(4662000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg10zt8j3l2p9dy24kdn8ctlupz9c0l0gtwclafnn",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(18648000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -1256,13 +1228,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1uxfmrc4arhef2am55lxjqcr38sye2tf94590hd",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(13986000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1tct0xyt4xemdxas4c05ackjk6nenhg6wxfh4zt",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(27972000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -1652,13 +1617,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg18gl36nj988lm7u8dsfldjtcsqv7qzzdtyk80je",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(2331000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1kj2s2p9k56x7dwvgf5vkat39mxnhej7q5k8vt7",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
@@ -1669,6 +1627,13 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1qx3yaanre054nlq84qdzufsjmrrxcqxwqyxjfj",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(18648000000)),
+		),
+		ActionCompleted: []bool{false},
+	},
+	{
+		Address: "pasg18gl36nj988lm7u8dsfldjtcsqv7qzzdtyk80je",
+		ClaimableAmount: types.NewCoins(
+			types.NewCoin("upasg", types.NewInt(2331000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -1883,13 +1848,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1x7zdqa44k4njejxlnem0fjugv626phfhmsqrsv",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(9324000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg157paj0r5ymw2peyudrh8x4ddlzfyrvazz9mrqz",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(4662000000)),
@@ -1956,13 +1914,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1lgu66ly24wz0x95hkhuzny754hfm9pkunravd4",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1ax32rmtyraxnf76w3tcx6pmt7psdfgfdqr0m7j",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(97902000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -2047,6 +1998,13 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg17vz8hvg96lddwawdfygvu89ua4v7qgd62j30cf",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
+		),
+		ActionCompleted: []bool{false},
+	},
+	{
+		Address: "pasg1ax32rmtyraxnf76w3tcx6pmt7psdfgfdqr0m7j",
+		ClaimableAmount: types.NewCoins(
+			types.NewCoin("upasg", types.NewInt(97902000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -2506,13 +2464,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg15e47t2utfx4ryweyxdpj6xlp4dtcvkx4m6aejs",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(72261000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1hz7y2csdrgswnkmnp9yunf69x72eh2p0m5chnl",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(4662000000)),
@@ -2730,13 +2681,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1plaeezrakuvtyak7qxg0l2tnlhq73tlrvczl48",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(6993000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1gve09wm4jkf3kzhe50frelkezp28uc5j2pu94r",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
@@ -2803,13 +2747,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1hmda69ykt8rzsrxanrxm2r837edln3pjvx4vtd",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1wv0e9y70vujsp9y547hfzw4zn2u78wfjr4sr32",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(27972000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -3325,13 +3262,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1nm50zycnm9yf33rv8n6lpks24usxzahk5usg2c",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(16317000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1lm25s78k6jpfq6kgg4lmd7hfukcyyrvx8anq6j",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(11655000000)),
@@ -3398,6 +3328,13 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1s6h4m6g8t8na4lyy4tvzhvrjt955mzzcuang4m",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(9324000000)),
+		),
+		ActionCompleted: []bool{false},
+	},
+	{
+		Address: "pasg1nm50zycnm9yf33rv8n6lpks24usxzahk5usg2c",
+		ClaimableAmount: types.NewCoins(
+			types.NewCoin("upasg", types.NewInt(16317000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -3517,13 +3454,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg10z6mwcv78kmnj4lm74ce3zydrqwuh5qhuuw4pa",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(9324000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1mm8huzhpk5tx5vgj877zse37c2zdymzlqss325",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(16317000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -3661,13 +3591,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1g6mw23zvgpk3g4h26sd7n2dfc29w8zevg7pm45",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(18648000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg17qrfgsyepv3mk2f29jkvf0y7q0fnyx7d66fcjv",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(18648000000)),
@@ -3685,13 +3608,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1vasunpy8eyx29fd4pk9kvkl8je2hpfvyzeg0ue",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(6993000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1e8zqr62l4twltss3570u0xtyqme5uxzn5fmafh",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(9324000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -3909,13 +3825,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1kc5aczjdyggu4yt08v44fplnhkwx98pgf5ch30",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(27972000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1cwecw85ecn5zjppfsm59ddsa7gqa3pnfgpketp",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(2331000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -4249,13 +4158,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1n6uyhxfuzr8tax5hwaqlc0gyuuvgx9gjua24hz",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(4662000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg16akr2g377x5hutw74a75p45ql6dnu5dr3zam03",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(13986000000)),
@@ -4522,13 +4424,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg15zz35mvfz5wslq29ftasflgefdanhumcdy66sh",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(4662000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1a8gx9m553deeajj8jcdlp37tgwqyy2c007yx22",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(4662000000)),
@@ -4553,13 +4448,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1a5ps8qwvvy2ejzvy80uz03q06ughcyqeuxauxf",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg14nrlh9t4mtjtvdh4h0kgkwgcjw0yc35hl2elwt",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(6993000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -4735,13 +4623,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg1u8s2x5954k6s94kawlyexweatv83dnnxksgqg2",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1pz3s84yzx2lc8x4gdej46pqr94f4z5t785d8u0",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(6993000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -5075,13 +4956,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1aq33wu0ld26l473ykv9gzc76d8pdyk0pjvhyzs",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(27972000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1swqcn946mvgvfpup84msgjs96kx6yejfnyr4ae",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(4662000000)),
@@ -5118,6 +4992,13 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 	},
 	{
 		Address: "pasg1dy6c2gvg0802ujsnkhcg3f0vuvqwypu3pe2jwu",
+		ClaimableAmount: types.NewCoins(
+			types.NewCoin("upasg", types.NewInt(27972000000)),
+		),
+		ActionCompleted: []bool{false},
+	},
+	{
+		Address: "pasg1aq33wu0ld26l473ykv9gzc76d8pdyk0pjvhyzs",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(27972000000)),
 		),
@@ -5257,13 +5138,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1cfq58rwrhz3npkquudspx0fqku8499jl3gayuv",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(9324000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1v40qwum0avxwuhrygmgchway8596cs52u8xcus",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
@@ -5302,13 +5176,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg12hwvkjvru4j2nttd7dxj3n4aqmxhuklwsrgc3x",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(30303000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1t7lqrjs7rlc9xzmrkhfcuxwsy89hgtyen4y06u",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(9324000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -5992,13 +5859,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1kdahzqelyjhr62qu9pfewpxn65r85s750rw2wg",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(18648000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1556nk7vnt90qhd599xnew77frmsl3w6l58csdz",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(4662000000)),
@@ -6013,30 +5873,9 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1av7xk5ukr6crnv8yqa0ufnjj20kgnec69x0utl",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(9324000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1lcfgsnhlgxtq8dklaljz87d4yak666k5lpecqr",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1tes5mthzlreq8le7pagdupga792p0jn2jvtky7",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(18648000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg10wv9mds80emehq3q0qrcvr5ssz8zwhhev8d7pn",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(6993000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -6160,13 +5999,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1rf5tezu2x62g9dusalluzj85vwdv0xrhdz7639",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(4662000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg17l9y74v8re90jgcsrsqa2uus09jkd89fhcqh76",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
@@ -6226,13 +6058,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg10tgegahhm8xcf5zm927364nrukxznc9qkck9th",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(13986000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg13j9fevamkgcjqf9huy682cczy9a7qx8dxsyuyz",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(6993000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
@@ -6440,13 +6265,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		ActionCompleted: []bool{false},
 	},
 	{
-		Address: "pasg1ackdvggytrqakvthkx3jz6jtmg96nfuz3d7vu5",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(23310000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
 		Address: "pasg1p06guptkql3eannp5cl5qeqh27xwhzjqfpr5qu",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(2331000000)),
@@ -6590,13 +6408,6 @@ var NewClaimRecords = []*claimtypes.ClaimRecord{
 		Address: "pasg13lzly6934ymemk6k3tzvlu3tl7v7gzq3qpldxr",
 		ClaimableAmount: types.NewCoins(
 			types.NewCoin("upasg", types.NewInt(256410000000)),
-		),
-		ActionCompleted: []bool{false},
-	},
-	{
-		Address: "pasg1aze45mu9nsh56zk8355khqnjr6r0tl9l6qvwn3",
-		ClaimableAmount: types.NewCoins(
-			types.NewCoin("upasg", types.NewInt(51282000000)),
 		),
 		ActionCompleted: []bool{false},
 	},
