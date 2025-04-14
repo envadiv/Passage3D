@@ -662,10 +662,14 @@ func (app *PassageApp) setupUpgradeHandlers() {
 			upgrade.CreateUpgradeHandler(
 				app.mm,
 				app.configurator,
+				app.appCodec,
 				app.DistrKeeper,
 				app.BankKeeper,
 				app.AccountKeeper,
 				app.StakingKeeper,
+				app.GovKeeper,
+				app.AuthzKeeper,
+				app.FeeGrantKeeper,
 				app.ClaimKeeper,
 			),
 		)
