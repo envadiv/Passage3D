@@ -10,7 +10,9 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	passageante "github.com/envadiv/Passage3D/app/ante"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
@@ -32,10 +34,11 @@ func CreateUpgradeHandler(
 	_ distribution.Keeper,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
+	sk staking.Keeper,
 	ck claim.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		if err := ExecuteProposal(ctx, ak, bk, ck); err != nil {
+		if err := ExecuteProposal(ctx, ak, bk, sk, ck); err != nil {
 			return nil, err
 		}
 
@@ -43,7 +46,7 @@ func CreateUpgradeHandler(
 	}
 }
 
-func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck claim.Keeper) error {
+func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, sk staking.Keeper, ck claim.Keeper) error {
 	oneMonth := time.Hour * 24 * 30
 
 	// clear old claim records
@@ -80,5 +83,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 	params.DurationUntilDecay = oneMonth
 
 	ck.SetParams(ctx, params)
-	return nil
+
+	// set minimum commission rate to validators
+	return SetValidatorsMinCommissionRate(ctx, sk, passageante.MinCommissionRate)
 }
