@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -38,6 +39,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/prometheus/client_golang/prometheus"
+)
+
+const (
+	baseDenom          string = "upasg"
+	defaultMinGasPrice string = "12.5"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -121,8 +127,9 @@ func initAppConfig() (string, interface{}) {
 	// - if you set srvCfg.MinGasPrices non-empty, validators CAN tweak their
 	//   own app.toml to override, or use this default value.
 	//
-	// In simapp, we set the min gas prices to 0.
-	srvCfg.MinGasPrices = "0upasg"
+	// We set the min gas prices to defaultMinGasPrice value.
+	// Error will be thrown if srvCfg.MinGasPrices value is less than defaultMinGasPrice value.
+	srvCfg.MinGasPrices = fmt.Sprintf("%s%s", defaultMinGasPrice, baseDenom)
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
@@ -265,6 +272,17 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
 
+	// validate minimum-gas-prices value is greater than or equal to defaultMinGasPrice value
+	minGasPricesStr := cast.ToString(appOpts.Get(server.FlagMinGasPrices))
+	minGasPrices, err := sdk.ParseDecCoins(minGasPricesStr)
+	if err != nil {
+		panic(err)
+	}
+	if minGasPrices.AmountOf(baseDenom).LT(sdk.MustNewDecFromStr(defaultMinGasPrice)) {
+		panic(fmt.Sprintf("minimum-gas-prices value in app.toml should be greater than or equal to %s%s",
+			defaultMinGasPrice, baseDenom))
+	}
+
 	return app.NewPassageApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
@@ -274,7 +292,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		appOpts,
 		wasmOpts,
 		baseapp.SetPruning(pruningOpts),
-		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
+		baseapp.SetMinGasPrices(minGasPricesStr),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
 		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
@@ -291,8 +309,8 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 // and exports state.
 func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-
+	appOpts servertypes.AppOptions,
+) (servertypes.ExportedApp, error) {
 	var simApp *app.PassageApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
