@@ -47,7 +47,7 @@ func CreateUpgradeHandler(
 }
 
 func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, sk staking.Keeper, ck claim.Keeper) error {
-	sixMonths := time.Hour * 24 * 180
+	oneMonth := time.Hour * 24 * 30
 
 	// clear old claim records
 	ck.ClearInitialClaimables(ctx)
@@ -78,9 +78,9 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, sk 
 
 	params := ck.GetParams(ctx)
 	params.AirdropEnabled = true
-	params.AirdropStartTime = time.Date(2025, 3, 10, 15, 0, 0, 0, time.UTC) // (dd/mm/yyyy: 10/03/2025, 15:00UTC)
-	params.DurationOfDecay = sixMonths
-	params.DurationUntilDecay = sixMonths
+	params.AirdropStartTime = time.Date(2025, 4, 24, 16, 30, 0, 0, time.UTC) // (dd/mm/yyyy: 24/04/2025, 16:30UTC)
+	params.DurationOfDecay = time.Second * 1
+	params.DurationUntilDecay = oneMonth
 
 	ck.SetParams(ctx, params)
 
