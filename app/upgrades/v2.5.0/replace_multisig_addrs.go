@@ -68,7 +68,7 @@ func MigrateMultisigAddresses(
 		}
 
 		// unbond old delegation
-		delegations, err := unbondOldDelegations(ctx, bk, sk, oldAddr)
+		delegations, err := unbondOldDelegations(ctx, sk, oldAddr)
 		if err != nil {
 			return fmt.Errorf("failed to unbond old delegations: %w", err)
 		}
@@ -170,7 +170,7 @@ func migrateBaseAccount(ctx sdk.Context, ak auth.AccountKeeper, newAddr sdk.AccA
 	return nil
 }
 
-func unbondOldDelegations(ctx sdk.Context, bk bank.Keeper, sk staking.Keeper,
+func unbondOldDelegations(ctx sdk.Context, sk staking.Keeper,
 	oldAddr sdk.AccAddress,
 ) ([]OldDelegation, error) {
 	// complete all existing redelegations
