@@ -38,12 +38,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	passageante "github.com/envadiv/Passage3D/app/ante"
 	"github.com/prometheus/client_golang/prometheus"
-)
-
-const (
-	baseDenom          string = "upasg"
-	defaultMinGasPrice string = "12.5"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -129,7 +125,7 @@ func initAppConfig() (string, interface{}) {
 	//
 	// We set the min gas prices to defaultMinGasPrice value.
 	// Error will be thrown if srvCfg.MinGasPrices value is less than defaultMinGasPrice value.
-	srvCfg.MinGasPrices = fmt.Sprintf("%s%s", defaultMinGasPrice, baseDenom)
+	srvCfg.MinGasPrices = fmt.Sprintf("%s%s", passageante.DefaultMinGasPrice, passageante.BaseDenom)
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
@@ -278,9 +274,9 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 	if err != nil {
 		panic(err)
 	}
-	if minGasPrices.AmountOf(baseDenom).LT(sdk.MustNewDecFromStr(defaultMinGasPrice)) {
-		panic(fmt.Sprintf("minimum-gas-prices value in app.toml should be greater than or equal to %s%s",
-			defaultMinGasPrice, baseDenom))
+	err = passageante.ValidateMinGasPrices(minGasPrices)
+	if err != nil {
+		panic(err)
 	}
 
 	return app.NewPassageApp(
