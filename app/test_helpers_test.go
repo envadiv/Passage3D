@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -432,13 +432,6 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 	return &ed25519.PubKey{Key: pkBytes}
 }
 
-// EmptyAppOptions is a stub implementing AppOptions
-type EmptyAppOptions struct{}
-
-// Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
-	return nil
-}
 
 // FundAccount is a utility function that funds an account by minting and
 // sending the coins to the address. This should be used for testing purposes

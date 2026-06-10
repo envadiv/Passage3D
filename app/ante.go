@@ -4,10 +4,11 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	ibcante "github.com/cosmos/ibc-go/v4/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v7/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	passageante "github.com/envadiv/Passage3D/app/ante"
 )
@@ -15,7 +16,7 @@ import (
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	TxCounterStoreKey sdk.StoreKey
+	TxCounterStoreKey storetypes.StoreKey
 	WasmConfig        wasmtypes.WasmConfig
 	IBCKeeper         *ibckeeper.Keeper
 }
@@ -45,13 +46,12 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(options.TxCounterStoreKey),
-		ante.NewRejectExtensionOptionsDecorator(),
-		ante.NewMempoolFeeDecorator(),
+		ante.NewExtensionOptionsDecorator(nil),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
+		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, nil),
 		passageante.NewBlockAccountDecorator(),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
@@ -59,7 +59,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		ibcante.NewAnteDecorator(options.IBCKeeper),
+		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

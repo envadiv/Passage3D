@@ -3,7 +3,7 @@ package claim
 import (
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/envadiv/Passage3D/x/claim/keeper"
 	"github.com/envadiv/Passage3D/x/claim/types"
