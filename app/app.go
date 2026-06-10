@@ -12,6 +12,7 @@ import (
 	appparams "github.com/envadiv/Passage3D/app/params"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	"github.com/envadiv/Passage3D/app/upgrades/v2.2.0"
+	v047 "github.com/envadiv/Passage3D/app/upgrades/v047"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -189,7 +190,7 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 
-	Upgrades = []upgrades.Upgrade{v2.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v047.Upgrade}
 )
 
 var (
@@ -578,6 +579,7 @@ func NewPassageApp(
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
 	app.setupUpgradeHandlers()
+	app.setupUpgradeStoreLoaders()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -664,8 +666,31 @@ func (app *PassageApp) setupUpgradeHandlers() {
 				app.BankKeeper,
 				app.AccountKeeper,
 				app.ClaimKeeper,
+				app.ConsensusParamsKeeper,
+				app.ParamsKeeper,
 			),
 		)
+	}
+}
+
+// setupUpgradeStoreLoaders configures the store loader to add/rename/delete
+// module stores at the scheduled upgrade height (e.g. x/consensus and x/crisis
+// in the v047 upgrade).
+func (app *PassageApp) setupUpgradeStoreLoaders() {
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
+	}
+
+	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		return
+	}
+
+	for _, upgrade := range Upgrades {
+		if upgradeInfo.Name == upgrade.UpgradeName {
+			storeUpgrades := upgrade.StoreUpgrades
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+		}
 	}
 }
 

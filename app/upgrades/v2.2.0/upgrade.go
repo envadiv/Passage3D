@@ -11,7 +11,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
@@ -37,6 +39,8 @@ func CreateUpgradeHandler(
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
 	ck claim.Keeper,
+	_ consensusparamkeeper.Keeper,
+	_ paramskeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
