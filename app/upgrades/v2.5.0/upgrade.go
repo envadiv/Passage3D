@@ -15,6 +15,8 @@ import (
 	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	passageante "github.com/envadiv/Passage3D/app/ante"
 	"github.com/envadiv/Passage3D/app/upgrades"
@@ -44,6 +46,8 @@ func CreateUpgradeHandler(
 	azk authz.Keeper,
 	fk feegrant.Keeper,
 	ck claim.Keeper,
+	_ consensusparamkeeper.Keeper,
+	_ paramskeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if err := ExecuteProposal(ctx, ak, bk, sk, ck); err != nil {

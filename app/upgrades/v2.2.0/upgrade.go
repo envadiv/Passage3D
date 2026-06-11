@@ -17,6 +17,8 @@ import (
 	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
@@ -49,6 +51,8 @@ func CreateUpgradeHandler(
 	_ authz.Keeper,
 	_ feegrant.Keeper,
 	ck claim.Keeper,
+	_ consensusparamkeeper.Keeper,
+	_ paramskeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if err := ExecuteProposal(ctx, ak, bk, ck, dk); err != nil {
@@ -68,7 +72,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 	}
 
 	// 3 year lock-up from relaunch and thereafter weekly vesting until end of year 5 from relaunch
-	pva := vestingtypes.NewPeriodicVestingAccount(authtypes.NewBaseAccount(vestingAcc, nil, ak.GetNextAccountNumber(ctx), 0),
+	pva := vestingtypes.NewPeriodicVestingAccount(authtypes.NewBaseAccount(vestingAcc, nil, ak.NextAccountNumber(ctx), 0),
 		amount,
 		1784905200,
 		genVestingPeriods(),
@@ -104,7 +108,7 @@ func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, ck 
 		sdk.NewCoin(amount[0].Denom, sdk.NewInt(18946800000000)),
 	}
 
-	amount = amount.Sub(oldAmount)
+	amount = amount.Sub(oldAmount...)
 
 	// send the added balances from airdrop account to claim module account
 	if err := bk.SendCoinsFromAccountToModule(ctx, airdropAccAddr, claimtypes.ModuleName, amount); err != nil {

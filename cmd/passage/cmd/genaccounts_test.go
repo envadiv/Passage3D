@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	simcmd "github.com/envadiv/Passage3D/cmd/passage/cmd"
 

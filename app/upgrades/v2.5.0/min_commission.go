@@ -13,7 +13,9 @@ func SetValidatorsMinCommissionRate(ctx sdk.Context, sk staking.Keeper, minCommi
 	for _, validator := range validators {
 		if validator.Commission.Rate.IsNil() || validator.Commission.Rate.LT(minCommissionRate) {
 			// call before validator modified hooks in staking keeper
-			sk.BeforeValidatorModified(ctx, validator.GetOperator())
+			if err := sk.Hooks().BeforeValidatorModified(ctx, validator.GetOperator()); err != nil {
+				return err
+			}
 			validator.Commission.Rate = minCommissionRate
 			validator.Commission.UpdateTime = ctx.BlockTime()
 			sk.SetValidator(ctx, validator)

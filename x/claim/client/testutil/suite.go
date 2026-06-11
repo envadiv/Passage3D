@@ -8,7 +8,7 @@ import (
 	"github.com/envadiv/Passage3D/x/claim/client/cli"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
