@@ -215,6 +215,7 @@ func New(t *testing.T, cfg Config) *Network {
 		appCfg.Telemetry.Enabled = false
 
 		ctx := server.NewDefaultContext()
+		ctx.Viper.Set(flags.FlagChainID, cfg.ChainID)
 		tmCfg := ctx.Config
 		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
 
