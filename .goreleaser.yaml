@@ -1,0 +1,91 @@
+# GoReleaser config for Passage (passaged).
+# Produces static, portable linux binaries with libwasmvm statically linked
+# (muslc), so validators need no libwasmvm.so at runtime.
+# Run via the goreleaser-cross image (bundles the amd64/arm64 cross toolchains).
+version: 1
+
+project_name: passage
+
+env:
+  - CGO_ENABLED=1
+
+before:
+  hooks:
+    - go mod download
+    # Fetch + checksum-verify the libwasmvm muslc static archives for the
+    # wasmvm version this chain links (v1.5.7). wasmvm's link_muslc.go links
+    # `-lwasmvm_muslc`, so each arch's archive must be named libwasmvm_muslc.a
+    # in that arch's lib dir (the per-build CGO_LDFLAGS -L points at it).
+    - bash -c 'wget -q https://github.com/CosmWasm/wasmvm/releases/download/v1.5.7/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a && echo "34e9dbd53ef7e734d688964b7921acd717ff19aef98b37a0b1b53f8b48b00f02  /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a" | sha256sum -c'
+    - bash -c 'mkdir -p /usr/lib/aarch64-linux-gnu && wget -q https://github.com/CosmWasm/wasmvm/releases/download/v1.5.7/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a && echo "a03ebd18bc8b9ec58598b0ca4848cb1322e62fd39de29d7e697a2d7c363be870  /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a" | sha256sum -c'
+
+builds:
+  - id: passage-linux-amd64
+    main: ./cmd/passage
+    binary: passage
+    goos: [linux]
+    goarch: [amd64]
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - CGO_LDFLAGS=-L/usr/lib/x86_64-linux-gnu
+    flags:
+      - -mod=readonly
+      - -trimpath
+      - -tags=netgo,muslc
+    ldflags:
+      - -s -w
+      - -X github.com/cosmos/cosmos-sdk/version.Name=passage
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=passage
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .FullCommit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,muslc
+      - -linkmode=external
+      - -extldflags '-Wl,-z,muldefs -static -lm'
+
+  - id: passage-linux-arm64
+    main: ./cmd/passage
+    binary: passage
+    goos: [linux]
+    goarch: [arm64]
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CGO_LDFLAGS=-L/usr/lib/aarch64-linux-gnu
+    flags:
+      - -mod=readonly
+      - -trimpath
+      - -tags=netgo,muslc
+    ldflags:
+      - -s -w
+      - -X github.com/cosmos/cosmos-sdk/version.Name=passage
+      - -X github.com/cosmos/cosmos-sdk/version.AppName=passage
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .FullCommit }}
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,muslc
+      - -linkmode=external
+      - -extldflags '-Wl,-z,muldefs -static -lm'
+
+archives:
+  - id: tarball
+    builds: [passage-linux-amd64, passage-linux-arm64]
+    format: tar.gz
+    name_template: 'passage-{{ .Version }}-{{ .Os }}-{{ .Arch }}'
+    files:
+      - LICENSE
+      - README.md
+  - id: rawbinary
+    builds: [passage-linux-amd64, passage-linux-arm64]
+    format: binary
+    name_template: 'passage-{{ .Version }}-{{ .Os }}-{{ .Arch }}'
+
+checksum:
+  name_template: 'sha256sum.txt'
+  algorithm: sha256
+
+snapshot:
+  name_template: '{{ incpatch .Version }}-next'
+
+changelog:
+  disable: true
+
+release:
+  prerelease: auto
