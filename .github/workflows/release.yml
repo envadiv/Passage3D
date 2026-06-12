@@ -1,0 +1,32 @@
+name: Release
+
+# Builds and publishes release binaries when a version tag is pushed.
+# Static linux amd64/arm64 binaries with libwasmvm linked in (muslc),
+# built via the goreleaser-cross image which bundles the CGO cross toolchains.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'      # e.g. v3.0.0
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'    # e.g. v3.0.0-rc1
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run GoReleaser (cross)
+        run: |
+          docker run --rm \
+            --entrypoint /bin/bash \
+            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -v "${{ github.workspace }}":/go/src/github.com/envadiv/Passage3D \
+            -w /go/src/github.com/envadiv/Passage3D \
+            ghcr.io/goreleaser/goreleaser-cross:v1.22.7 \
+            -c "git config --global --add safe.directory '*' && goreleaser release --clean"
