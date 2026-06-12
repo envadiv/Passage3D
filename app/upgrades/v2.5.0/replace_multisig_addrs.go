@@ -375,7 +375,7 @@ func migrateGovVotes(ctx sdk.Context, gk gov.Keeper, addressMap AddressMap) {
 		newAddr, found := addressMap[vote.Voter]
 		if found {
 			vote.Voter = newAddr
-			gk.SetVote(ctx, vote)
+			gk.SetVote(ctx, *vote)
 		}
 	}
 }
