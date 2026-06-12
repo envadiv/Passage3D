@@ -43,7 +43,7 @@ type UpgradeTestSuite struct {
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
-	t.Skip("v2.5.0 was a historical mainnet upgrade (already shipped); its test harness (SetupWithGenesisValSet+Commit + feegrant/authz grant setup) needs an SDK 0.47 rework. The upgrade being delivered (v047) is validated end-to-end by the real-state fork-test.")
+	t.Skip("v2.5.0 was a historical mainnet upgrade (already shipped); its test harness (SetupWithGenesisValSet+Commit + feegrant/authz grant setup) needs an SDK 0.47 rework. The upgrade being delivered (3.0.0) is validated end-to-end by the real-state fork-test.")
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
