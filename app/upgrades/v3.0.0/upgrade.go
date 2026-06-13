@@ -25,7 +25,7 @@ import (
 )
 
 // Name is the on-chain upgrade name for the Cosmos SDK v0.45 -> v0.47 migration.
-const Name = "3.0.0"
+const Name = "v3.0.0"
 
 // Upgrade migrates passage-2 from cosmos-sdk v0.45 (wasmd 0.34 / wasmvm 1.5.7) to
 // cosmos-sdk v0.47 (wasmd 0.45 / wasmvm 1.5.x). wasmvm stays in the 1.5 line so
@@ -61,7 +61,7 @@ func CreateUpgradeHandler(
 	paramsKeeper paramskeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("3.0.0 upgrade: migrating Tendermint consensus params x/params -> x/consensus")
+		ctx.Logger().Info("v3.0.0 upgrade: migrating Tendermint consensus params x/params -> x/consensus")
 
 		// The "baseapp" subspace is not registered by initParamsKeeper, so a fresh
 		// Subspace call is safe here (it would panic if already occupied).
@@ -70,13 +70,13 @@ func CreateUpgradeHandler(
 			WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 		baseapp.MigrateParams(ctx, legacyBaseAppSubspace, &consensusParamsKeeper)
 
-		ctx.Logger().Info("3.0.0 upgrade: running module migrations")
+		ctx.Logger().Info("v3.0.0 upgrade: running module migrations")
 		vm, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
 			return nil, err
 		}
 
-		ctx.Logger().Info("3.0.0 upgrade: complete")
+		ctx.Logger().Info("v3.0.0 upgrade: complete")
 		return vm, nil
 	}
 }
