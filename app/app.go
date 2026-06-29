@@ -9,9 +9,12 @@ import (
 
 	appparams "github.com/envadiv/Passage3D/app/params"
 	"github.com/envadiv/Passage3D/app/upgrades"
-	v047 "github.com/envadiv/Passage3D/app/upgrades/v047"
 	v050 "github.com/envadiv/Passage3D/app/upgrades/v050"
 	"github.com/envadiv/Passage3D/app/upgrades/v2.2.0"
+	v240 "github.com/envadiv/Passage3D/app/upgrades/v2.4.0"
+	v250 "github.com/envadiv/Passage3D/app/upgrades/v2.5.0"
+	v260 "github.com/envadiv/Passage3D/app/upgrades/v2.6.0"
+	v300 "github.com/envadiv/Passage3D/app/upgrades/v3.0.0"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -188,7 +191,7 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 
-	Upgrades = []upgrades.Upgrade{v2.Upgrade, v047.Upgrade, v050.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v240.Upgrade, v250.Upgrade, v260.Upgrade, v300.Upgrade, v050.Upgrade}
 )
 
 var (
@@ -716,7 +719,7 @@ func (app *PassageApp) setupUpgradeHandlers() {
 
 // setupUpgradeStoreLoaders configures the store loader to add/rename/delete
 // module stores at the scheduled upgrade height (e.g. x/consensus and x/crisis
-// in the v047 upgrade).
+// in the v3.0.0 upgrade).
 func (app *PassageApp) setupUpgradeStoreLoaders() {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {

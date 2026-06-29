@@ -65,7 +65,7 @@ func CreateUpgradeHandler(
 		legacyBaseAppSubspace := paramsKeeper.
 			Subspace(baseapp.Paramspace).
 			WithKeyTable(paramstypes.ConsensusParamsKeyTable())
-		if err := baseapp.MigrateParams(sdkCtx, legacyBaseAppSubspace, &consensusParamsKeeper); err != nil {
+		if err := baseapp.MigrateParams(sdkCtx, legacyBaseAppSubspace, &consensusParamsKeeper.ParamsStore); err != nil {
 			return nil, err
 		}
 
