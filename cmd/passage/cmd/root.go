@@ -2,28 +2,25 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	appparams "github.com/envadiv/Passage3D/app/params"
 
+	"cosmossdk.io/log"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
-	dbm "github.com/cometbft/cometbft-db"
-	tmcfg "github.com/cometbft/cometbft/config"
-	tmtypes "github.com/cometbft/cometbft/types"
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/envadiv/Passage3D/app"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -32,24 +29,51 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	passageante "github.com/envadiv/Passage3D/app/ante"
 	"github.com/prometheus/client_golang/prometheus"
 )
+
+// basicManager is built once from a throwaway app so every AppModuleBasic
+// carries its codecs (0.50 â a bare AppModuleBasic{} nil-panics in GetTxCmd).
+var basicManager module.BasicManager
+
+type rootAppOptions struct{ home string }
+
+func (o rootAppOptions) Get(k string) interface{} {
+	if k == flags.FlagHome {
+		return o.home
+	}
+	return nil
+}
+
+func rootTempDir() string {
+	dir, err := os.MkdirTemp("", "passage-cli")
+	if err != nil {
+		return app.DefaultNodeHome
+	}
+	return dir
+}
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
+
+	tmpHome := rootTempDir()
+	tempApp := app.NewPassageApp(
+		log.NewNopLogger(), dbm.NewMemDB(), nil, false,
+		map[int64]bool{}, tmpHome, uint(1), encodingConfig,
+		app.GetEnabledProposals(), rootAppOptions{home: tmpHome}, []wasm.Option(nil),
+	)
+	basicManager = tempApp.BasicModuleManager
+
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -90,6 +114,12 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig)
 
+	autoCliOpts := tempApp.AutoCliOpts()
+	autoCliOpts.ClientCtx = initClientCtx
+	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
+		panic(err)
+	}
+
 	return rootCmd, encodingConfig
 }
 
@@ -127,9 +157,8 @@ func initAppConfig() (string, interface{}) {
 	// - if you set srvCfg.MinGasPrices non-empty, validators CAN tweak their
 	//   own app.toml to override, or use this default value.
 	//
-	// We set the min gas prices to defaultMinGasPrice value.
-	// Error will be thrown if srvCfg.MinGasPrices value is less than defaultMinGasPrice value.
-	srvCfg.MinGasPrices = fmt.Sprintf("%s%s", passageante.DefaultMinGasPrice, passageante.BaseDenom)
+	// In simapp, we set the min gas prices to 0.
+	srvCfg.MinGasPrices = "0upasg"
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
@@ -155,16 +184,15 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator),
-		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
+		genutilcli.InitCmd(basicManager, app.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator, authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())),
+		genutilcli.MigrateGenesisCmd(genutilcli.MigrationMap),
+		genutilcli.GenTxCmd(basicManager, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())),
+		genutilcli.ValidateGenesisCmd(basicManager),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		testnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
-		config.Cmd(),
 	)
 
 	a := appCreator{encodingConfig}
@@ -172,13 +200,12 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		server.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
+		keys.Commands(),
 	)
 
-	// add rosetta
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -196,14 +223,12 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
 
-	app.ModuleBasics.AddQueryCommands(cmd)
+	basicManager.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -229,7 +254,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	app.ModuleBasics.AddTxCommands(cmd)
+	basicManager.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -241,57 +266,14 @@ type appCreator struct {
 
 // newApp is an appCreator
 func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-	var cache sdk.MultiStorePersistentCache
-
-	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
-		cache = store.NewCommitKVStoreCacheManager()
-	}
-
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
 
-	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
-	if err != nil {
-		panic(err)
-	}
-
-	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-	snapshotDB, err := dbm.NewDB("metadata", dbm.GoLevelDBBackend, snapshotDir)
-	if err != nil {
-		panic(err)
-	}
-	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
-	if err != nil {
-		panic(err)
-	}
 	var wasmOpts []wasm.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-
-	// validate minimum-gas-prices value is greater than or equal to defaultMinGasPrice value
-	minGasPricesStr := cast.ToString(appOpts.Get(server.FlagMinGasPrices))
-	minGasPrices, err := sdk.ParseDecCoins(minGasPricesStr)
-	if err != nil {
-		panic(err)
-	}
-	err = passageante.ValidateMinGasPrices(minGasPrices)
-	if err != nil {
-		panic(err)
-	}
-
-	// SDK 0.47 baseapp validates each block's chain-id against app.chainID, which is
-	// set only by InitChain or SetChainID. A node restarting on existing state never
-	// re-runs InitChain, so set it explicitly (from --chain-id or the genesis file).
-	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
-	if chainID == "" {
-		genDoc, gerr := tmtypes.GenesisDocFromFile(filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "config", "genesis.json"))
-		if gerr != nil {
-			panic(gerr)
-		}
-		chainID = genDoc.ChainID
 	}
 
 	return app.NewPassageApp(
@@ -302,19 +284,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		app.GetEnabledProposals(),
 		appOpts,
 		wasmOpts,
-		baseapp.SetPruning(pruningOpts),
-		baseapp.SetChainID(chainID),
-		baseapp.SetMinGasPrices(minGasPricesStr),
-		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
-		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
-		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
-		baseapp.SetInterBlockCache(cache),
-		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
-		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(
-			cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
-			cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
-		)),
+		server.DefaultBaseappOptions(appOpts)...,
 	)
 }
 
@@ -322,8 +292,8 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 // and exports state.
 func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions, modulesToExport []string,
-) (servertypes.ExportedApp, error) {
+	appOpts servertypes.AppOptions, modulesToExport []string) (servertypes.ExportedApp, error) {
+
 	var simApp *app.PassageApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {

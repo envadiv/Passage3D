@@ -1,27 +1,26 @@
 package v3_0_0
 
 import (
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
+
+	"context"
 )
 
 // Name is the on-chain upgrade name for the Cosmos SDK v0.45 -> v0.47 migration.
@@ -48,35 +47,35 @@ var Upgrade = upgrades.Upgrade{
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	_ codec.Codec,
 	_ distribution.Keeper,
 	_ bank.Keeper,
 	_ auth.AccountKeeper,
-	_ staking.Keeper,
-	_ gov.Keeper,
-	_ authz.Keeper,
-	_ feegrant.Keeper,
 	_ claim.Keeper,
 	consensusParamsKeeper consensusparamkeeper.Keeper,
 	paramsKeeper paramskeeper.Keeper,
+	_ *stakingkeeper.Keeper,
+	_ govkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("v3.0.0 upgrade: migrating Tendermint consensus params x/params -> x/consensus")
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx.Logger().Info("v3.0.0 upgrade: migrating Tendermint consensus params x/params -> x/consensus")
 
 		// The "baseapp" subspace is not registered by initParamsKeeper, so a fresh
 		// Subspace call is safe here (it would panic if already occupied).
 		legacyBaseAppSubspace := paramsKeeper.
 			Subspace(baseapp.Paramspace).
 			WithKeyTable(paramstypes.ConsensusParamsKeyTable())
-		baseapp.MigrateParams(ctx, legacyBaseAppSubspace, &consensusParamsKeeper)
+		if err := baseapp.MigrateParams(sdkCtx, legacyBaseAppSubspace, &consensusParamsKeeper); err != nil {
+			return nil, err
+		}
 
-		ctx.Logger().Info("v3.0.0 upgrade: running module migrations")
+		sdkCtx.Logger().Info("v3.0.0 upgrade: running module migrations")
 		vm, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
 			return nil, err
 		}
 
-		ctx.Logger().Info("v3.0.0 upgrade: complete")
+		sdkCtx.Logger().Info("v3.0.0 upgrade: complete")
 		return vm, nil
 	}
 }

@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -11,10 +12,10 @@ const blockedMultisigAddr = "pasg105488mw9t3qtp62jhllde28v40xqxpjksjqmvx"
 
 // BlockAccountDecorator restricts the community pool multisig account's transactions, except for the community fund.
 // Call next AnteHandler if the message is allowed
-type BlockAccountDecorator struct{}
+type BlockAccountDecorator struct{ cdc codec.Codec }
 
-func NewBlockAccountDecorator() BlockAccountDecorator {
-	return BlockAccountDecorator{}
+func NewBlockAccountDecorator(cdc codec.Codec) BlockAccountDecorator {
+	return BlockAccountDecorator{cdc: cdc}
 }
 
 func (bad BlockAccountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -24,7 +25,7 @@ func (bad BlockAccountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 
 	msgs := tx.GetMsgs()
 	// handle msg based on type
-	if err := handleMessages(msgs); err != nil {
+	if err := handleMessages(bad.cdc, msgs); err != nil {
 		return ctx, err
 	}
 
@@ -32,7 +33,7 @@ func (bad BlockAccountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 }
 
 // handleMessages check and handle each msg with rules
-func handleMessages(msgs []sdk.Msg) error {
+func handleMessages(cdc codec.Codec, msgs []sdk.Msg) error {
 	for _, msg := range msgs {
 
 		if msgExec, ok := msg.(*authztypes.MsgExec); ok {
@@ -41,16 +42,19 @@ func handleMessages(msgs []sdk.Msg) error {
 				return err
 			}
 
-			if err := handleMessages(msgs); err != nil {
+			if err := handleMessages(cdc, msgs); err != nil {
 				return err
 			}
 		} else if _, ok := msg.(*distributiontypes.MsgFundCommunityPool); ok {
 			return nil
 		}
 
-		signers := msg.GetSigners()
+		signers, _, sgErr := cdc.GetMsgV1Signers(msg)
+		if sgErr != nil {
+			return sgErr
+		}
 		for _, signer := range signers {
-			if signer.String() == blockedMultisigAddr {
+			if sdk.AccAddress(signer).String() == blockedMultisigAddr {
 				return sdkerrors.ErrUnauthorized.Wrapf("%s is not allowed to perform this transaction", blockedMultisigAddr)
 			}
 		}

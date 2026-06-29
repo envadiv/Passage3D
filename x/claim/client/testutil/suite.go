@@ -3,13 +3,14 @@ package testutil
 import (
 	"fmt"
 
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/envadiv/Passage3D/app"
 	"github.com/envadiv/Passage3D/testutil/network"
 	"github.com/envadiv/Passage3D/x/claim/client/cli"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +55,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	genState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
 	claimGenState := claimtypes.DefaultGenesis()
-	claimGenState.ModuleAccountBalance = sdk.NewCoin(claimtypes.DefaultClaimDenom, sdk.NewInt(30))
+	claimGenState.ModuleAccountBalance = sdk.NewCoin(claimtypes.DefaultClaimDenom, sdkmath.NewInt(30))
 	claimGenState.ClaimRecords = claimRecords
 	claimGenStateBz := s.cfg.Codec.MustMarshalJSON(claimGenState)
 	genState[claimtypes.ModuleName] = claimGenStateBz
@@ -119,7 +120,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 				claimtypes.Action_name[0],
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(claimtypes.DefaultClaimDenom, sdk.NewInt(20))},
+			sdk.Coins{sdk.NewCoin(claimtypes.DefaultClaimDenom, sdkmath.NewInt(20))},
 		},
 	}
 
@@ -153,7 +154,7 @@ func (s *IntegrationTestSuite) TestCmdQueryModuleAccountBalance() {
 			[]string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			sdk.Coins{sdk.NewCoin(claimtypes.DefaultClaimDenom, sdk.NewInt(30))},
+			sdk.Coins{sdk.NewCoin(claimtypes.DefaultClaimDenom, sdkmath.NewInt(30))},
 		},
 	}
 

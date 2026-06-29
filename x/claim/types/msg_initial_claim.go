@@ -43,10 +43,10 @@ func (msg MsgClaim) GetSignBytes() []byte {
 func (msg MsgClaim) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address (%s)", err)
 	}
 	if len(msg.ClaimAction) == 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "empty action, action type is required")
+		return sdkerrors.ErrNotFound.Wrapf("empty action, action type is required")
 	}
 	return nil
 }

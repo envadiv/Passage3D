@@ -3,11 +3,13 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 
 	"github.com/envadiv/Passage3D/x/claim/types"
 	"github.com/gogo/protobuf/proto"
 
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -169,10 +171,10 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 
 	// Positive, since goneTime > params.DurationUntilDecay
 	decayTime := elapsedAirdropTime - params.DurationUntilDecay
-	decayPercent := sdk.NewDec(decayTime.Nanoseconds()).QuoInt64(params.DurationOfDecay.Nanoseconds())
-	claimablePercent := sdk.OneDec().Sub(decayPercent)
+	decayPercent := sdkmath.LegacyNewDec(decayTime.Nanoseconds()).QuoInt64(params.DurationOfDecay.Nanoseconds())
+	claimablePercent := sdkmath.LegacyOneDec().Sub(decayPercent)
 
-	claimablePerAction = sdk.NewCoin(claimablePerAction.Denom, sdk.NewDecFromInt(claimablePerAction.Amount).Mul(claimablePercent).RoundInt())
+	claimablePerAction = sdk.NewCoin(claimablePerAction.Denom, sdkmath.LegacyNewDecFromInt(claimablePerAction.Amount).Mul(claimablePercent).RoundInt())
 	return claimablePerAction, nil
 }
 
@@ -267,7 +269,7 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 // ClearClaimables clear claimable amounts
 func (k Keeper) ClearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.ClaimRecordsStorePrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.ClaimRecordsStorePrefix)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
