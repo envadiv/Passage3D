@@ -8,7 +8,7 @@
 
 ## Before submit — fill placeholders in proposal_v4.0.0.json
 1. `PENDING_AMD64` / `PENDING_ARM64` → real sha256 of the published v4.0.0 release binaries.
-2. `[PENDING fork-test ...]` in description → real-state fork-test result (NN/NN contracts preserved).
+2. ~~fork-test~~ DONE: 33/33 codes, 79/79 contracts preserved on real state.
 3. Re-verify `height` against current chain height the day of submit.
 
 ## Submit (gov v1, on a node with the signing key)
