@@ -1,23 +1,21 @@
 package v2_5
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	passageante "github.com/envadiv/Passage3D/app/ante"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
@@ -37,26 +35,23 @@ var Upgrade = upgrades.Upgrade{
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	appCodec codec.Codec,
 	_ distribution.Keeper,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
-	sk staking.Keeper,
-	gk gov.Keeper,
-	azk authz.Keeper,
-	fk feegrant.Keeper,
 	ck claim.Keeper,
 	_ consensusparamkeeper.Keeper,
 	_ paramskeeper.Keeper,
+	sk *stakingkeeper.Keeper,
+	gk govkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		if err := ExecuteProposal(ctx, ak, bk, sk, ck); err != nil {
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if err := ExecuteProposal(sdkCtx, ak, bk, sk, ck); err != nil {
 			return nil, err
 		}
 
 		// migrate multisig addresses
-		if err := MigrateMultisigAddresses(ctx, appCodec, AddressMigrations, bk, ak, sk, gk,
-			azk, fk, ck); err != nil {
+		if err := MigrateMultisigAddresses(sdkCtx, AddressMigrations, bk, ak, sk, gk); err != nil {
 			return nil, err
 		}
 
@@ -64,7 +59,7 @@ func CreateUpgradeHandler(
 	}
 }
 
-func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, sk staking.Keeper, ck claim.Keeper) error {
+func ExecuteProposal(ctx sdk.Context, ak auth.AccountKeeper, bk bank.Keeper, sk *stakingkeeper.Keeper, ck claim.Keeper) error {
 	oneMonth := time.Hour * 24 * 30
 
 	// clear old claim records

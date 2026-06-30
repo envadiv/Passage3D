@@ -1,13 +1,14 @@
 package ante
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var MinCommissionRate = sdk.MustNewDecFromStr("0.05")
+var MinCommissionRate = math.LegacyMustNewDecFromStr("0.05")
 
 // ValidateMinCommissionDecorator validates the minimum commission rate of validator
 // to be not less than minimum commission rate when creating or editing validator.
@@ -60,7 +61,7 @@ func (mcd ValidateMinCommissionDecorator) handleMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-func validateMinCommissionRate(rate sdk.Dec) error {
+func validateMinCommissionRate(rate math.LegacyDec) error {
 	if rate.IsNil() || rate.LT(MinCommissionRate) {
 		return sdkerrors.ErrInvalidRequest.Wrapf(
 			"cannot set validator commission to less than minimum rate of %s", MinCommissionRate)

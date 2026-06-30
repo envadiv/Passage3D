@@ -1,21 +1,20 @@
 package v2
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"context"
+
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authz "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	distribution "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/envadiv/Passage3D/app/upgrades"
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
 	claimtypes "github.com/envadiv/Passage3D/x/claim/types"
@@ -32,20 +31,17 @@ var Upgrade = upgrades.Upgrade{
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	_ codec.Codec,
 	_ distribution.Keeper,
 	bk bank.Keeper,
 	ak auth.AccountKeeper,
-	_ staking.Keeper,
-	_ gov.Keeper,
-	_ authz.Keeper,
-	_ feegrant.Keeper,
 	_ claim.Keeper,
 	_ consensusparamkeeper.Keeper,
 	_ paramskeeper.Keeper,
+	_ *stakingkeeper.Keeper,
+	_ govkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		if err := ExecuteProposal(ctx, ak, bk); err != nil {
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if err := ExecuteProposal(sdk.UnwrapSDKContext(ctx), ak, bk); err != nil {
 			return nil, err
 		}
 

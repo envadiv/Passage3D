@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		ModuleAccountBalance: sdk.NewCoin(DefaultClaimDenom, sdk.ZeroInt()),
+		ModuleAccountBalance: sdk.NewCoin(DefaultClaimDenom, sdkmath.ZeroInt()),
 		Params: Params{
 			AirdropStartTime:   time.Time{},
 			DurationUntilDecay: DefaultDurationUntilDecay, // 2 month
@@ -36,7 +37,7 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
-	if !totalClaimable.IsEqual(sdk.NewCoins(gs.ModuleAccountBalance)) {
+	if !totalClaimable.Equal(sdk.NewCoins(gs.ModuleAccountBalance)) {
 		return ErrIncorrectModuleAccountBalance
 	}
 
