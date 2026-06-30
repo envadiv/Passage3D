@@ -10,7 +10,7 @@
           "name": "v4.0.0",
           "time": "0001-01-01T00:00:00Z",
           "height": "19950687",
-          "info": "{\"binaries\":{\"linux/amd64\":\"https://github.com/envadiv/Passage3D/releases/download/v4.0.0/passage-4.0.0-linux-amd64?checksum=sha256:PENDING_AMD64\",\"linux/arm64\":\"https://github.com/envadiv/Passage3D/releases/download/v4.0.0/passage-4.0.0-linux-arm64?checksum=sha256:PENDING_ARM64\"}}",
+          "info": "{\"binaries\":{\"linux/amd64\":\"https://github.com/Ninjaxan/Passage3D/releases/download/v4.0.0/passage-4.0.0-linux-amd64?checksum=sha256:PENDING_AMD64\",\"linux/arm64\":\"https://github.com/Ninjaxan/Passage3D/releases/download/v4.0.0/passage-4.0.0-linux-arm64?checksum=sha256:PENDING_ARM64\"}}",
           "upgraded_client_state": null
         }
       },
