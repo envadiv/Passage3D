@@ -1,4 +1,4 @@
-package v050
+package v4_0_0
 
 import (
 	"context"
@@ -22,8 +22,8 @@ import (
 	claim "github.com/envadiv/Passage3D/x/claim/keeper"
 )
 
-// Name is the on-chain upgrade name for the SDK v0.47 -> v0.50 migration.
-const Name = "v050"
+// Name is the on-chain upgrade name for the SDK v0.47 -> v0.50 migration (Passage v4.0.0).
+const Name = "v4.0.0"
 
 // Upgrade migrates the chain from Cosmos SDK v0.47 to v0.50. StoreUpgrades.Added
 // is set in app.go alongside any new modules (e.g. x/circuit).
