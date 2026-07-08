@@ -1,9 +1,9 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
 )
 
 type StakingKeeper interface {
-	BondDenom(sdk.Context) string
+	BondDenom(context.Context) (string, error)
 }

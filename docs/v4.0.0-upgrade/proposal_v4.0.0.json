@@ -1,0 +1,24 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.gov.v1.MsgExecLegacyContent",
+      "content": {
+        "@type": "/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
+        "title": "Upgrade to v4.0.0 (Cosmos SDK v0.47 -> v0.50)",
+        "description": "Upgrades passage-2 from Cosmos SDK v0.47 to v0.50 (CometBFT v0.38.12, ibc-go v8.0.0, wasmd v0.50.x / wasmvm 1.5.x - no contract-state change). Enables x/circuit (circuit breaker), expedited governance, proposal cancellation, Sign Mode Textual, and AutoCLI. The upgrade handler sets: minimum validator commission 5%; expedited voting period 24h and expedited threshold 67%; governance quorum 50% and veto threshold 50% (SDK v0.50 shares quorum and veto between normal and expedited proposals); expedited minimum deposit 1,000,000 PASG. Includes a required iavl v1.2.2 empty-store patch - without it, v0.50 nodes fail to load the v0.47 database at the upgrade height. Real-state fork-tested on forked passage-2 mainnet state: all module migrations apply (gov 4->5, ibc 4->5, slashing 3->4, staking 4->5, transfer 3->5, auth 4->5), x/circuit added via StoreUpgrades, and 33/33 wasm code hashes and 79/79 contracts preserved; the node produced blocks past the upgrade height with min-commission 5% and expedited governance (24h / 67%) live. On-chain upgrade name: v4.0.0. Binaries and checksums in the v4.0.0 GitHub release.",
+        "plan": {
+          "name": "v4.0.0",
+          "time": "0001-01-01T00:00:00Z",
+          "height": "19950687",
+          "info": "{\"binaries\":{\"linux/amd64\":\"https://github.com/Ninjaxan/Passage3D/releases/download/v4.0.0/passage-4.0.0-linux-amd64?checksum=sha256:ad7817afcc40a0e9159e54a73aedaa71bf80e278c5c5b90e3b91c30aa3db41af\",\"linux/arm64\":\"https://github.com/Ninjaxan/Passage3D/releases/download/v4.0.0/passage-4.0.0-linux-arm64?checksum=sha256:8a7c6ba6e677f5b915bb7335c3bd992f714e46e0c046e20cced9b150bead67fc\"}}",
+          "upgraded_client_state": null
+        }
+      },
+      "authority": "pasg10d07y265gmmuvt4z0w9aw880jnsr700je62lmv"
+    }
+  ],
+  "metadata": "",
+  "deposit": "100000000000upasg",
+  "title": "Upgrade to v4.0.0 (Cosmos SDK v0.47 -> v0.50)",
+  "summary": "Upgrades passage-2 from Cosmos SDK v0.47 to v0.50 at height 19950687 (~2026-07-09 12:00 UTC). See description for module/param details."
+}

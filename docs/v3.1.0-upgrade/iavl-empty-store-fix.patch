@@ -1,0 +1,68 @@
+--- /home/itsadmin/go/pkg/mod/github.com/cosmos/iavl@v1.2.2/nodedb.go	2026-06-29 16:54:08.321103665 +0000
++++ iavl-fork/nodedb.go	2026-06-29 18:09:39.807205114 +0000
+@@ -869,24 +869,63 @@
+ }
+ 
+ // hasLegacyVersion checks if the given version exists in the legacy format.
++// keyExists reports whether key is present regardless of its value.
++// NOTE(passage hop2 fix): db.Has()/db.Get() treat a zero-length value as
++// absent, which misreports EMPTY iavl roots (an empty tree, e.g. x/evidence on
++// a chain with no evidence, stores its root under r<version> (legacy) or
++// nodeKeyFormat (native) with an empty value). This value-agnostic iterator
++// check (matching getLegacyLatestVersion) is required to load empty stores
++// across the 0.47(iavl0.20)->0.50(iavl1) upgrade AND to reload the 0.50-written
++// db afterwards ("version does not exist").
++func (ndb *nodeDB) keyExists(key []byte) (bool, error) {
++	itr, err := ndb.db.Iterator(key, nil)
++	if err != nil {
++		return false, err
++	}
++	defer itr.Close()
++	return itr.Valid() && bytes.Equal(itr.Key(), key), itr.Error()
++}
++
+ func (ndb *nodeDB) hasLegacyVersion(version int64) (bool, error) {
+-	return ndb.db.Has(ndb.legacyRootKey(version))
++	return ndb.keyExists(ndb.legacyRootKey(version))
+ }
+ 
+ // GetRoot gets the nodeKey of the root for the specific version.
+ func (ndb *nodeDB) GetRoot(version int64) ([]byte, error) {
+ 	rootKey := GetRootKey(version)
+-	val, err := ndb.db.Get(nodeKeyFormat.Key(rootKey))
++	nativeKey := nodeKeyFormat.Key(rootKey)
++	val, err := ndb.db.Get(nativeKey)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+ 	if val == nil {
++		// NOTE(passage hop2 fix): a natively-committed EMPTY tree stores its
++		// root under nodeKeyFormat with a zero-length value; db.Get returns nil
++		// for that, so distinguish present-empty from absent before falling
++		// back to the legacy root.
++		if has, herr := ndb.keyExists(nativeKey); herr != nil {
++			return nil, herr
++		} else if has {
++			return nil, nil // present native empty root -> empty tree at version
++		}
+ 		// try the legacy root key
+ 		val, err := ndb.db.Get(ndb.legacyRootKey(version))
+ 		if err != nil {
+ 			return nil, err
+ 		}
+ 		if val == nil {
++			// NOTE(passage hop2 fix): db.Get returns nil for BOTH an absent
++			// key and a present key with a zero-length value. An EMPTY iavl
++			// tree stores its legacy root with an empty value, so we must
++			// distinguish the two by key existence (value-agnostic iterator
++			// check) instead of treating nil as "version does not exist".
++			has, herr := ndb.hasLegacyVersion(version)
++			if herr != nil {
++				return nil, herr
++			}
++			if has {
++				return nil, nil // present empty root -> empty tree at this version
++			}
+ 			return nil, ErrVersionDoesNotExist
+ 		}
+ 		if len(val) == 0 { // empty root

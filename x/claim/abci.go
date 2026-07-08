@@ -2,13 +2,12 @@ package claim
 
 import (
 	"github.com/envadiv/Passage3D/x/claim/keeper"
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker is called on every block
-func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 }
 
 // EndBlocker is called on every block

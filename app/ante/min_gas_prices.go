@@ -3,6 +3,7 @@ package ante
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -31,7 +32,7 @@ func (mgp ValidateMinGasPricesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, 
 
 // ValidateMinGasPrices validates given minimum gas prices
 func ValidateMinGasPrices(minGasPrices sdk.DecCoins) error {
-	if minGasPrices.AmountOf(BaseDenom).LT(sdk.MustNewDecFromStr(DefaultMinGasPrice)) {
+	if minGasPrices.AmountOf(BaseDenom).LT(math.LegacyMustNewDecFromStr(DefaultMinGasPrice)) {
 		return fmt.Errorf("minimum-gas-prices value should be greater than or equal to %s%s",
 			DefaultMinGasPrice, BaseDenom)
 	}
