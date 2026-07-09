@@ -15,6 +15,7 @@ import (
 	v260 "github.com/envadiv/Passage3D/app/upgrades/v2.6.0"
 	v300 "github.com/envadiv/Passage3D/app/upgrades/v3.0.0"
 	v400 "github.com/envadiv/Passage3D/app/upgrades/v4.0.0"
+	v401 "github.com/envadiv/Passage3D/app/upgrades/v4.0.1"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -195,7 +196,7 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 
-	Upgrades = []upgrades.Upgrade{v2.Upgrade, v240.Upgrade, v250.Upgrade, v260.Upgrade, v300.Upgrade, v400.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v240.Upgrade, v250.Upgrade, v260.Upgrade, v300.Upgrade, v400.Upgrade, v401.Upgrade}
 )
 
 var (
