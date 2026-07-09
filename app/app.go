@@ -673,6 +673,7 @@ func NewPassageApp(
 			WasmConfig:        wasmConfig,
 			TxCounterStoreKey: keys[wasm.StoreKey],
 			CircuitKeeper:     &app.CircuitKeeper,
+			Codec:             appCodec,
 		},
 	)
 
