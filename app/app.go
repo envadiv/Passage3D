@@ -15,6 +15,8 @@ import (
 	v260 "github.com/envadiv/Passage3D/app/upgrades/v2.6.0"
 	v300 "github.com/envadiv/Passage3D/app/upgrades/v3.0.0"
 	v400 "github.com/envadiv/Passage3D/app/upgrades/v4.0.0"
+	v401 "github.com/envadiv/Passage3D/app/upgrades/v4.0.1"
+	v402 "github.com/envadiv/Passage3D/app/upgrades/v4.0.2"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -99,6 +101,9 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -174,6 +179,8 @@ var (
 		solomachine.AppModuleBasic{},
 		transfer.AppModuleBasic{}, // i.e ibc-transfer module
 
+		groupmodule.AppModuleBasic{},
+
 		wasm.AppModuleBasic{},
 
 		// passage3d claim module
@@ -195,7 +202,7 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 
-	Upgrades = []upgrades.Upgrade{v2.Upgrade, v240.Upgrade, v250.Upgrade, v260.Upgrade, v300.Upgrade, v400.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v240.Upgrade, v250.Upgrade, v260.Upgrade, v300.Upgrade, v400.Upgrade, v401.Upgrade, v402.Upgrade}
 )
 
 var (
@@ -234,6 +241,7 @@ type PassageApp struct {
 	AuthzKeeper           authzkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
+	GroupKeeper           groupkeeper.Keeper
 
 	IBCKeeper      *ibckeeper.Keeper        // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper ibctransferkeeper.Keeper // for cross-chain fungible token transfers
@@ -293,7 +301,7 @@ func NewPassageApp(
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey, crisistypes.StoreKey, consensusparamtypes.StoreKey,
 		authzkeeper.StoreKey, claimtypes.StoreKey, wasm.StoreKey,
-		circuittypes.StoreKey,
+		circuittypes.StoreKey, group.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
 	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
@@ -384,6 +392,8 @@ func NewPassageApp(
 	app.StakingKeeper = stakingKeeper
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper)
+
+	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
 
 	// register the proposal types
 	// AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
@@ -502,6 +512,7 @@ func NewPassageApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		transfer.NewAppModule(app.TransferKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
@@ -557,6 +568,7 @@ func NewPassageApp(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
+		group.ModuleName,
 		feegrant.ModuleName,
 		claimtypes.ModuleName,
 		paramstypes.ModuleName,
@@ -586,6 +598,7 @@ func NewPassageApp(
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		authz.ModuleName,
+		group.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
