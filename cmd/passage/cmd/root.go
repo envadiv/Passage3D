@@ -198,6 +198,14 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 	a := appCreator{encodingConfig}
 	server.AddCommands(rootCmd, app.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 
+	// Expose CometBFT event re-indexing as `passage comet reindex-event`
+	// (validator request post-v4.0.2; CLI-only, no consensus impact).
+	for _, c := range rootCmd.Commands() {
+		if c.Name() == "comet" {
+			c.AddCommand(NewReindexEventCmd())
+		}
+	}
+
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
