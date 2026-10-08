@@ -17,6 +17,7 @@ import (
 	v400 "github.com/envadiv/Passage3D/app/upgrades/v4.0.0"
 	v401 "github.com/envadiv/Passage3D/app/upgrades/v4.0.1"
 	v402 "github.com/envadiv/Passage3D/app/upgrades/v4.0.2"
+	v410 "github.com/envadiv/Passage3D/app/upgrades/v4.1.0"
 
 	"github.com/envadiv/Passage3D/x/claim"
 
@@ -126,6 +127,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 const appName = "passage"
@@ -202,7 +204,7 @@ var (
 		wasm.ModuleName:                {authtypes.Burner},
 	}
 
-	Upgrades = []upgrades.Upgrade{v2.Upgrade, v240.Upgrade, v250.Upgrade, v260.Upgrade, v300.Upgrade, v400.Upgrade, v401.Upgrade, v402.Upgrade}
+	Upgrades = []upgrades.Upgrade{v2.Upgrade, v240.Upgrade, v250.Upgrade, v260.Upgrade, v300.Upgrade, v400.Upgrade, v401.Upgrade, v402.Upgrade, v410.Upgrade}
 )
 
 var (
@@ -432,7 +434,7 @@ func NewPassageApp(
 	transferModule := transfer.NewIBCModule(app.TransferKeeper)
 
 	wasmDir := filepath.Join(homePath, "wasm")
-	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	wasmConfig, err := wasm.ReadNodeConfig(appOpts)
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
@@ -440,8 +442,7 @@ func NewPassageApp(
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	// See https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
-	availableCapabilities := "iterator,staking,stargate,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_3"
-	app.WasmKeeper = wasm.NewKeeper(
+	app.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[wasm.StoreKey]),
 		app.AccountKeeper,
@@ -457,7 +458,8 @@ func NewPassageApp(
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
-		availableCapabilities,
+		wasmtypes.VMConfig{},
+		wasmkeeper.BuiltInCapabilities(),
 		authority,
 		wasmOpts...,
 	)
