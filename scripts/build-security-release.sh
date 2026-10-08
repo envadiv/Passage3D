@@ -5,6 +5,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 version=${VERSION:-v4.1.0-rc1}
 out=${OUT_DIR:-build/security-release}
 arch=${GOARCH:-amd64}
+command -v patchelf >/dev/null || { echo 'Install patchelf before building' >&2; exit 1; }
 case "$arch" in
   amd64) asset=libwasmvm.x86_64.so; checksum=bfd7157b96028037eb1bdf82b2b7cbf4ebd38a5ab6b1336f0d35c73cf569c783 ;;
   arm64) asset=libwasmvm.aarch64.so; checksum=248f92469e65eb0d334247287c5d68035873e4c89fb30fe49fe006c3bf4c97b6 ;;
@@ -33,6 +34,7 @@ export CGO_LDFLAGS='-Wl,-rpath,$ORIGIN'
 go build -p "${BUILD_PARALLELISM:-8}" -mod=readonly -trimpath -tags netgo \
   -ldflags "-s -w -X github.com/cosmos/cosmos-sdk/version.Name=passage -X github.com/cosmos/cosmos-sdk/version.AppName=passage -X github.com/cosmos/cosmos-sdk/version.Version=$version -X github.com/cosmos/cosmos-sdk/version.Commit=$commit -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo -linkmode=external" \
   -o "$binary" ./cmd/passage
+patchelf --set-rpath '$ORIGIN' "$binary"
 
 if [[ "$arch" = "$(go env GOHOSTARCH)" ]]; then
   actual=$("$binary" query wasm libwasmvm-version)

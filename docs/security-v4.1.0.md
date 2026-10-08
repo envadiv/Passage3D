@@ -60,14 +60,14 @@ that this fork contains every upstream 1.2.4 change.
 
 ## Build and local rehearsal
 
-On Linux with glibc, install Go 1.25.14 and a native GCC, then run:
+On Linux with glibc, install Go 1.25.14 and a native GCC and patchelf, then run:
 
 ```bash
 VERSION=v4.1.0-rc1 bash scripts/build-security-release.sh
 build/security-release/passage-4.1.0-rc1-linux-amd64 query wasm libwasmvm-version
 ```
 
-Keep the executable and `libwasmvm.x86_64.so` (or the arm64 library) together in the same directory. The executable uses an origin-relative runtime search path. Unpack and checksum-check both files; Cosmovisor staging must copy both into the upgrade bin directory. The static configuration is retained as a legacy path but is not validated for this candidate.
+Keep the executable and `libwasmvm.x86_64.so` (or the arm64 library) together in the same directory. The executable uses only an origin-relative runtime search path, with build-machine cache paths removed. Unpack and checksum-check both files; Cosmovisor staging must copy both into the upgrade bin directory. The static configuration is retained as a legacy path but is not validated for this candidate.
 
 The build uses `-mod=readonly`. Final versions require a clean committed
 checkout. An RC may be built from dirty inputs, but its provenance records that
@@ -106,15 +106,20 @@ module initialization bug. This is not a modification to mainnet state.
    Test representative existing NFT/marketplace contracts, signing modes,
    staking/rewards, IBC client queries and actual IBC transfers against an
    isolated counterparty. Verify restart and state export/import.
-4. Resolve the inherited legacy test-suite imports/API incompatibilities before
-   describing the full unit suite as passing. The local governance rehearsal
-   does not replace that work or the real-state fork.
+4. Run the full unit suite and security validation workflow on the release
+   commit. The obsolete test imports and SDK API calls have been ported, and
+   test app initialization now follows the SDK 0.50 ABCI lifecycle with isolated
+   Wasm directories. The previously skipped migration-registry harness is
+   replaced by a real registered-handler test. The existing network CLI test
+   skip remains; the local governance rehearsal complements unit coverage.
 5. Have the Passage maintainers confirm the release number, fork evidence,
    activation method/height, release commit and both architecture artifacts.
    Coordinate validator readiness before submitting a proposal or binary swap.
 
 No governance transaction, production binary replacement, service restart,
-upstream PR, release tag or publication is performed by this candidate build.
+release tag or publication is performed by this candidate build. A draft
+upstream PR may be submitted after local validation; that is not approval to
+activate the upgrade on mainnet.
 
 ## Validator staging after release approval
 

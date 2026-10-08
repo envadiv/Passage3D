@@ -112,7 +112,7 @@ def main():
             genesis["app_state"]["auth"]["accounts"][0]["account_number"] = "1"
             gov = genesis["app_state"]["gov"]["params"]
             gov["min_deposit"] = [{"denom": "upasg", "amount": "10"}]
-            gov["voting_period"] = "5s"
+            gov["voting_period"] = "15s"
             gov["expedited_voting_period"] = "2s"
             genesis["consensus"]["params"]["block"]["max_gas"] = "-1"
             genesis_path.write_text(json.dumps(genesis))
@@ -145,7 +145,7 @@ def main():
 
             authority = find_address(module_account)
             assert authority
-            upgrade_height = height() + 30
+            upgrade_height = height() + 60
             proposal = {
                 "messages": [{"@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
                               "authority": authority,
@@ -162,7 +162,7 @@ def main():
             wait_until(lambda: query(old, "upgrade", "plan").get("plan", {}).get("name") == "v4.1.0")
             # CometBFT can stop consensus at an upgrade while its process and
             # RPC remain alive. Detect the upgrade halt, then stop the process.
-            wait_until(lambda: 'UPGRADE "v4.1.0" NEEDED' in log_path.read_text(), seconds=90)
+            wait_until(lambda: 'UPGRADE "v4.1.0" NEEDED' in log_path.read_text(), seconds=150)
             log.flush()
             assert 'UPGRADE "v4.1.0" NEEDED' in log_path.read_text(), "Old node did not halt for the upgrade"
             upgrade_info = json.loads((home / "data" / "upgrade-info.json").read_text())

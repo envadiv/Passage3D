@@ -28,7 +28,7 @@ jobs:
         with:
           go-version: '1.25.14'
       - name: Install native compiler
-        run: sudo apt-get update && sudo apt-get install -y build-essential
+        run: sudo apt-get update && sudo apt-get install -y build-essential patchelf
       - name: Build with matching security library and verify runtime
         env:
           VERSION: ${{ github.ref_name }}
