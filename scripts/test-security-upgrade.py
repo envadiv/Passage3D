@@ -156,12 +156,16 @@ def main():
             proposal_id = max(int(p["id"]) for p in proposals)
             tx(old, "gov", "vote", str(proposal_id), "yes")
             wait_until(lambda: query(old, "upgrade", "plan").get("plan", {}).get("name") == "v4.1.0")
-            wait_until(lambda: process.poll() is not None, seconds=90)
+            # CometBFT can stop consensus at an upgrade while its process and
+            # RPC remain alive. Detect the upgrade halt, then stop the process.
+            wait_until(lambda: 'UPGRADE "v4.1.0" NEEDED' in log_path.read_text(), seconds=90)
             log.flush()
             assert 'UPGRADE "v4.1.0" NEEDED' in log_path.read_text(), "Old node did not halt for the upgrade"
             upgrade_info = json.loads((home / "data" / "upgrade-info.json").read_text())
             assert upgrade_info["name"] == "v4.1.0"
             assert int(upgrade_info["height"]) == upgrade_height
+            assert height() == upgrade_height - 1
+            stop(process)
 
             process = start(new)
             wait_until(lambda: height() > upgrade_height + 2)
