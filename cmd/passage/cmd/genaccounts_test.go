@@ -9,20 +9,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"cosmossdk.io/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/cometbft/cometbft/libs/log"
 
 	simcmd "github.com/envadiv/Passage3D/cmd/passage/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	simapp "github.com/envadiv/Passage3D/app"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	simapp "github.com/envadiv/Passage3D/app"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
@@ -71,7 +71,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
 			appCodec := simapp.MakeEncodingConfig().Marshaler

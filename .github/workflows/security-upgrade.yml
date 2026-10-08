@@ -1,0 +1,66 @@
+name: Security upgrade validation
+
+on:
+  pull_request:
+    branches: [v4.0.x]
+  push:
+    branches: [codex/passage-security-v4.1.0]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-22.04
+            old_sha: e5021b658f691e70124009dae8fc0b5738ef110edcb74853469f536f034e781d
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+            old_sha: e4fd07e081fd90f959d84e4ade9db390db844babc92be7b5c440e7ef2f9dfeca
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.14'
+      - run: sudo apt-get update && sudo apt-get install -y build-essential patchelf
+      - name: Unit tests
+        run: go test -mod=readonly -p 2 -timeout 10m ./...
+      - name: Build verified runtime bundle
+        env:
+          GOARCH: ${{ matrix.arch }}
+          BUILD_PARALLELISM: '2'
+        run: bash scripts/build-security-release.sh
+      - name: Fetch verified old binary and contract fixture
+        env:
+          ARCH: ${{ matrix.arch }}
+          OLD_SHA: ${{ matrix.old_sha }}
+        run: |
+          mkdir -p build/rehearsal-inputs
+          curl -fL --retry 3 "https://github.com/envadiv/Passage3D/releases/download/v4.0.3/passage-4.0.3-linux-$ARCH" -o build/rehearsal-inputs/passage-old
+          printf '%s  %s\n' "$OLD_SHA" build/rehearsal-inputs/passage-old | sha256sum -c
+          chmod +x build/rehearsal-inputs/passage-old
+          curl -fL --retry 3 https://raw.githubusercontent.com/CosmWasm/wasmd/v0.50.0/x/wasm/keeper/testdata/hackatom.wasm -o build/rehearsal-inputs/hackatom.wasm
+          printf '%s  %s\n' 3f4cd47c39c57fe1733fb41ed176eebd9d5c67baf5df8a1eeda1455e758f8514 build/rehearsal-inputs/hackatom.wasm | sha256sum -c
+      - name: Rehearse governance upgrade and contract execution
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          python3 scripts/test-security-upgrade.py \
+            --old build/rehearsal-inputs/passage-old \
+            --new "build/security-release/passage-4.1.0-rc1-linux-$ARCH" \
+            --contract build/rehearsal-inputs/hackatom.wasm \
+            --work-dir build/rehearsal | tee build/rehearsal-result.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: security-candidate-${{ matrix.arch }}
+          path: |
+            build/security-release/*.tar.gz
+            build/security-release/*.provenance.txt
+            build/rehearsal-result.json

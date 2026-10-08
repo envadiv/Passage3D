@@ -20,7 +20,7 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 	TxCounterStoreKey storetypes.StoreKey
-	WasmConfig        wasmtypes.WasmConfig
+	WasmConfig        wasmtypes.NodeConfig
 	IBCKeeper         *ibckeeper.Keeper
 	Codec             codec.Codec
 	CircuitKeeper     circuitante.CircuitBreaker

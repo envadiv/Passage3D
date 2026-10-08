@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"testing"
 	"time"
 
 	"cosmossdk.io/log"
@@ -43,11 +44,11 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 
 var emptyWasmOptions []wasm.Option = nil
 
-func setup(withGenesis bool, invCheckPeriod uint) (*PassageApp, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint, home string) (*PassageApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
 	app := NewPassageApp(
-		log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome,
+		log.NewNopLogger(), db, nil, true, map[int64]bool{}, home,
 		invCheckPeriod, encCdc, nil, EmptyAppOptions{}, emptyWasmOptions,
 	)
 	if withGenesis {
@@ -63,26 +64,33 @@ func setup(withGenesis bool, invCheckPeriod uint) (*PassageApp, GenesisState) {
 // SDK v0.47 panics on an empty validator set after InitGenesis, so the test app
 // must be seeded with at least one validator whose stake >= the configured power
 // reduction.
-func Setup(isCheckTx bool) *PassageApp {
+func Setup(isCheckTx bool, t testing.TB) *PassageApp {
 	privVal := ed25519.GenPrivKey()
 	pubKey := privVal.PubKey()
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
+	// Reserve account zero for the inherited claim genesis module account.
 	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 1, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 
-	return setupWithGenesisValSet(valSet, []authtypes.GenesisAccount{acc}, balance)
+	app := setupWithGenesisValSet(t.TempDir(), valSet, []authtypes.GenesisAccount{acc}, balance)
+	t.Cleanup(func() {
+		if err := app.Close(); err != nil {
+			t.Errorf("close test app: %v", err)
+		}
+	})
+	return app
 }
 
 // setupWithGenesisValSet initializes a PassageApp from the given validator set
 // and genesis accounts, bonding each validator at the power-reduction threshold.
-func setupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *PassageApp {
-	app, genesisState := setup(true, 5)
+func setupWithGenesisValSet(home string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *PassageApp {
+	app, genesisState := setup(true, 5, home)
 
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -143,7 +151,7 @@ func setupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []authtypes.Ge
 		panic(err)
 	}
 
-	app.InitChain(
+	_, err = app.InitChain(
 		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
@@ -151,12 +159,24 @@ func setupWithGenesisValSet(valSet *tmtypes.ValidatorSet, genAccs []authtypes.Ge
 		},
 	)
 
-	app.Commit()
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	if err != nil {
+		panic(err)
+	}
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
 	})
+	if err != nil {
+		panic(err)
+	}
+
+	if _, err := app.Commit(); err != nil {
+		panic(err)
+	}
+	if _, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2, Time: time.Now().UTC(), NextValidatorsHash: valSet.Hash()}); err != nil {
+		panic(err)
+	}
 
 	return app
 }

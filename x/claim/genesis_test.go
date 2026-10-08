@@ -9,9 +9,9 @@ import (
 
 	simapp "github.com/envadiv/Passage3D/app"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -45,8 +45,8 @@ var testGenesis = types.GenesisState{
 }
 
 func TestClaimInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app := simapp.Setup(false, t)
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	claim.InitGenesis(ctx, app.ClaimKeeper, genesis)
@@ -61,8 +61,8 @@ func TestClaimInitGenesis(t *testing.T) {
 }
 
 func TestClaimExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app := simapp.Setup(false, t)
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
 	claim.InitGenesis(ctx, app.ClaimKeeper, genesis)
@@ -91,8 +91,8 @@ func TestClaimExportGenesis(t *testing.T) {
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app := simapp.Setup(false, t)
+	ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	encodingConfig := simapp.MakeEncodingConfig()
@@ -104,8 +104,8 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
-		app := simapp.Setup(false)
-		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		app := simapp.Setup(false, t)
+		ctx := app.BaseApp.NewContextLegacy(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := claim.NewAppModule(appCodec, app.ClaimKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)

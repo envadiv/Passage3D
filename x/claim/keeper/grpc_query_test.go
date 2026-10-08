@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"time"
 
 	"github.com/envadiv/Passage3D/x/claim/types"
@@ -21,7 +22,7 @@ func (suite *KeeperTestSuite) TestGrpcQueryModuleAccountBalance() {
 	grpcClient := suite.queryClient
 
 	resp, _ := grpcClient.ModuleAccountBalance(context.Background(), &types.QueryModuleAccountBalanceRequest{})
-	suite.Require().Equal(resp.ModuleAccountBalance.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(10000000))).String())
+	suite.Require().Equal(resp.ModuleAccountBalance.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdkmath.NewInt(10000000))).String())
 }
 
 func (suite *KeeperTestSuite) TestGrpcQueryClaimRecords() {
@@ -54,5 +55,5 @@ func (suite *KeeperTestSuite) TestGrpcQueryClaimRecords() {
 	//// get claim record for action
 	//actionResp, err := grpcClient.TotalClaimable(context.Background(), &types.QueryTotalClaimableRequest{Address: addr1.String()})
 	//suite.Require().NoError(err)
-	//suite.Require().Equal(actionResp.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(100))).String())
+	//suite.Require().Equal(actionResp.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdkmath.NewInt(100))).String())
 }

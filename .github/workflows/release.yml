@@ -1,32 +1,65 @@
 name: Release
 
-# Builds and publishes release binaries when a version tag is pushed.
-# Static linux amd64/arm64 binaries with libwasmvm linked in (muslc),
-# built via the goreleaser-cross image which bundles the CGO cross toolchains.
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'      # e.g. v3.0.0
-      - 'v[0-9]+.[0-9]+.[0-9]+-*'    # e.g. v3.0.0-rc1
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-22.04
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+    runs-on: ${{ matrix.runner }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.14'
+      - name: Install native compiler
+        run: sudo apt-get update && sudo apt-get install -y build-essential patchelf
+      - name: Build with matching security library and verify runtime
+        env:
+          VERSION: ${{ github.ref_name }}
+          GOARCH: ${{ matrix.arch }}
+          BUILD_PARALLELISM: '2'
+        run: bash scripts/build-security-release.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: passage-${{ matrix.arch }}
+          path: |
+            build/security-release/passage-*-linux-*
+            build/security-release/SHA256SUMS-*.txt
+            build/security-release/libwasmvm.*.so
 
-      - name: Run GoReleaser (cross)
+  publish:
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: Publish draft for review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
         run: |
-          docker run --rm \
-            --entrypoint /bin/bash \
-            -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
-            -v "${{ github.workspace }}":/go/src/github.com/envadiv/Passage3D \
-            -w /go/src/github.com/envadiv/Passage3D \
-            ghcr.io/goreleaser/goreleaser-cross:v1.22.7 \
-            -c "git config --global --add safe.directory '*' && goreleaser release --clean"
+          cat release/SHA256SUMS-*.txt > release/SHA256SUMS.txt
+          gh release create "$TAG" release/passage-*-linux-* release/libwasmvm.*.so release/SHA256SUMS.txt \
+            --verify-tag --draft --title "Passage $TAG" \
+            --notes 'Coordinated security upgrade. Review the real-state rehearsal evidence and validator instructions before publishing.'

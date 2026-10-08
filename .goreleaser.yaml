@@ -1,4 +1,4 @@
-# GoReleaser config for Passage (passaged).
+# Legacy static config; v4.1.0 releases use scripts/build-security-release.sh.
 # Produces static, portable linux binaries with libwasmvm statically linked
 # (muslc), so validators need no libwasmvm.so at runtime.
 # Run via the goreleaser-cross image (bundles the amd64/arm64 cross toolchains).
@@ -13,11 +13,11 @@ before:
   hooks:
     - go mod download
     # Fetch + checksum-verify the libwasmvm muslc static archives for the
-    # wasmvm version this chain links (v1.5.7). wasmvm's link_muslc.go links
-    # `-lwasmvm_muslc`, so each arch's archive must be named libwasmvm_muslc.a
+    # wasmvm version this chain links (v2.2.9). wasmvm's link_muslc.go links
+    # the architecture-specific muslc archive names below
     # in that arch's lib dir (the per-build CGO_LDFLAGS -L points at it).
-    - bash -c 'wget -q https://github.com/CosmWasm/wasmvm/releases/download/v1.5.7/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a && echo "34e9dbd53ef7e734d688964b7921acd717ff19aef98b37a0b1b53f8b48b00f02  /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a" | sha256sum -c'
-    - bash -c 'mkdir -p /usr/lib/aarch64-linux-gnu && wget -q https://github.com/CosmWasm/wasmvm/releases/download/v1.5.7/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a && echo "a03ebd18bc8b9ec58598b0ca4848cb1322e62fd39de29d7e697a2d7c363be870  /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a" | sha256sum -c'
+    - bash -c 'wget -q https://github.com/CosmWasm/wasmvm/releases/download/v2.2.9/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.x86_64.a && echo "56e7c590fe11a6a51381c80c2710f71af1244acfb8cd1d5839d638313b7bd401  /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.x86_64.a" | sha256sum -c'
+    - bash -c 'mkdir -p /usr/lib/aarch64-linux-gnu && wget -q https://github.com/CosmWasm/wasmvm/releases/download/v2.2.9/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.aarch64.a && echo "4b632c22534d330b5111d7279faa7c96374e2097cbdff208cc5e040f1df41982  /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.aarch64.a" | sha256sum -c'
 
 builds:
   - id: passage-linux-amd64
