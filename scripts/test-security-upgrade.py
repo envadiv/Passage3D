@@ -43,6 +43,10 @@ def main():
             with urllib.request.urlopen(rpc + "/status", timeout=3) as response:
                 return int(json.load(response)["result"]["sync_info"]["latest_block_height"])
 
+        def application_height():
+            with urllib.request.urlopen(rpc + "/abci_info", timeout=3) as response:
+                return int(json.load(response)["result"]["response"]["last_block_height"])
+
         def wait_until(fn, seconds=90):
             deadline = time.monotonic() + seconds
             while time.monotonic() < deadline:
@@ -164,7 +168,9 @@ def main():
             upgrade_info = json.loads((home / "data" / "upgrade-info.json").read_text())
             assert upgrade_info["name"] == "v4.1.0"
             assert int(upgrade_info["height"]) == upgrade_height
-            assert height() == upgrade_height - 1
+            # RPC's consensus height can include the halted proposal block;
+            # the application's committed height must remain one block behind.
+            assert application_height() == upgrade_height - 1
             stop(process)
 
             process = start(new)
