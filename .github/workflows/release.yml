@@ -16,9 +16,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-24.04
+            runner: ubuntu-22.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -27,8 +27,8 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.25.14'
-      - name: Install native static compiler
-        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Install native compiler
+        run: sudo apt-get update && sudo apt-get install -y build-essential
       - name: Build with matching security library and verify runtime
         env:
           VERSION: ${{ github.ref_name }}
@@ -41,10 +41,11 @@ jobs:
           path: |
             build/security-release/passage-*-linux-*
             build/security-release/SHA256SUMS-*.txt
+            build/security-release/libwasmvm.*.so
 
   publish:
     needs: build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
@@ -59,6 +60,6 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           cat release/SHA256SUMS-*.txt > release/SHA256SUMS.txt
-          gh release create "$TAG" release/passage-*-linux-* release/SHA256SUMS.txt \
+          gh release create "$TAG" release/passage-*-linux-* release/libwasmvm.*.so release/SHA256SUMS.txt \
             --verify-tag --draft --title "Passage $TAG" \
             --notes 'Coordinated security upgrade. Review the real-state rehearsal evidence and validator instructions before publishing.'

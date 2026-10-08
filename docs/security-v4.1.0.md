@@ -52,7 +52,7 @@ that this fork contains every upstream 1.2.4 change.
   fees, upload permissions, staking/governance parameters, or contract state.
 - Adapts the Wasm keeper to the new node/VM configuration API, uses the VM's
   built-in capability list, and enables the modern VM's supported capabilities.
-- Links the **2.2.9** static archive with a pinned SHA256, then verifies
+- Bundles the **2.2.9** shared library with a pinned SHA256, then verifies
   `passage query wasm libwasmvm-version` reports **2.2.9**.
 - Updates the legacy GoReleaser library pins and provides native amd64/arm64
   build jobs. Tag builds produce a draft release for review. The workflow has
@@ -60,12 +60,14 @@ that this fork contains every upstream 1.2.4 change.
 
 ## Build and local rehearsal
 
-On Linux, install Go 1.25.14 and a native `musl-gcc`, then run:
+On Linux with glibc, install Go 1.25.14 and a native GCC, then run:
 
 ```bash
 VERSION=v4.1.0-rc1 bash scripts/build-security-release.sh
 build/security-release/passage-4.1.0-rc1-linux-amd64 query wasm libwasmvm-version
 ```
+
+Keep the executable and `libwasmvm.x86_64.so` (or the arm64 library) together in the same directory. The executable uses an origin-relative runtime search path. Unpack and checksum-check both files; Cosmovisor staging must copy both into the upgrade bin directory. The static configuration is retained as a legacy path but is not validated for this candidate.
 
 The build uses `-mod=readonly`. Final versions require a clean committed
 checkout. An RC may be built from dirty inputs, but its provenance records that
@@ -118,7 +120,7 @@ upstream PR, release tag or publication is performed by this candidate build.
 
 Use the final maintainer-published artifact and its published checksum, not an
 unreviewed RC. Check the binary version and runtime library first. Stage it in
-`$DAEMON_HOME/cosmovisor/upgrades/v4.1.0/bin/passage`; the directory and governance
+`$DAEMON_HOME/cosmovisor/upgrades/v4.1.0/bin/passage` together with its bundled runtime library; the directory and governance
 plan must both use exactly `v4.1.0`. Keep the old binary and backups, and allow
 Cosmovisor to switch only at the agreed upgrade height. Do not swap early.
 

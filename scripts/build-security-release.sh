@@ -6,16 +6,16 @@ version=${VERSION:-v4.1.0-rc1}
 out=${OUT_DIR:-build/security-release}
 arch=${GOARCH:-amd64}
 case "$arch" in
-  amd64) asset=libwasmvm_muslc.x86_64.a; checksum=56e7c590fe11a6a51381c80c2710f71af1244acfb8cd1d5839d638313b7bd401 ;;
-  arm64) asset=libwasmvm_muslc.aarch64.a; checksum=4b632c22534d330b5111d7279faa7c96374e2097cbdff208cc5e040f1df41982 ;;
+  amd64) asset=libwasmvm.x86_64.so; checksum=bfd7157b96028037eb1bdf82b2b7cbf4ebd38a5ab6b1336f0d35c73cf569c783 ;;
+  arm64) asset=libwasmvm.aarch64.so; checksum=248f92469e65eb0d334247287c5d68035873e4c89fb30fe49fe006c3bf4c97b6 ;;
   *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
 esac
 
 test "$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmd)" = v0.54.10
 test "$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v2)" = v2.2.9
-mkdir -p "$out/lib/$arch"
+mkdir -p "$out"
 out=$(cd "$out" && pwd)
-lib="$out/lib/$arch/$asset"
+lib="$out/$asset"
 curl --fail --location --retry 3 \
   "https://github.com/CosmWasm/wasmvm/releases/download/v2.2.9/$asset" -o "$lib"
 printf '%s  %s\n' "$checksum" "$lib" | sha256sum --check
@@ -28,10 +28,10 @@ if [[ -n "$dirty" && "$version" != *-rc* ]]; then
 fi
 binary="$out/passage-${version#v}-linux-$arch"
 export CGO_ENABLED=1 GOOS=linux GOARCH="$arch"
-export CC=${CC:-musl-gcc}
-export CGO_LDFLAGS="-L$out/lib/$arch"
-go build -p "${BUILD_PARALLELISM:-8}" -mod=readonly -trimpath -tags netgo,muslc \
-  -ldflags "-s -w -X github.com/cosmos/cosmos-sdk/version.Name=passage -X github.com/cosmos/cosmos-sdk/version.AppName=passage -X github.com/cosmos/cosmos-sdk/version.Version=$version -X github.com/cosmos/cosmos-sdk/version.Commit=$commit -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,muslc -linkmode=external -extldflags '-static -lm'" \
+export CC=${CC:-gcc}
+export CGO_LDFLAGS='-Wl,-rpath,$ORIGIN'
+go build -p "${BUILD_PARALLELISM:-8}" -mod=readonly -trimpath -tags netgo \
+  -ldflags "-s -w -X github.com/cosmos/cosmos-sdk/version.Name=passage -X github.com/cosmos/cosmos-sdk/version.AppName=passage -X github.com/cosmos/cosmos-sdk/version.Version=$version -X github.com/cosmos/cosmos-sdk/version.Commit=$commit -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo -linkmode=external" \
   -o "$binary" ./cmd/passage
 
 if [[ "$arch" = "$(go env GOHOSTARCH)" ]]; then
@@ -40,9 +40,10 @@ if [[ "$arch" = "$(go env GOHOSTARCH)" ]]; then
 fi
 (
   cd "$out"
-  sha256sum "$(basename "$binary")" > "SHA256SUMS-$arch.txt"
+  sha256sum "$(basename "$binary")" "$asset" > "SHA256SUMS-$arch.txt"
 )
 printf 'version=%s\nplan=v4.1.0\ncommit=%s\nwasmd=v0.54.10\nwasmvm=v2.2.9\ngo=%s\ndirty=%s\n' \
   "$version" "$commit" "$(go version)" "$([[ -n "$dirty" ]] && echo true || echo false)" \
   > "$binary.provenance.txt"
-echo "Built $binary"
+tar -czf "$out/passage-${version#v}-linux-$arch.tar.gz" -C "$out" "$(basename "$binary")" "$asset" "$(basename "$binary").provenance.txt" "SHA256SUMS-$arch.txt"
+echo "Built $binary and matching runtime bundle"
