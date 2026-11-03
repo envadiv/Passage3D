@@ -19,5 +19,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      # The base branch's buf.lock can pin BSR commits that no longer exist, which makes
+      # its protos unbuildable as they are. Compare against the base protos built with the
+      # dependencies of this pull request.
       - name: check-breakage against the pull request base
-        run: make proto-check-breaking PROTO_BREAKING_AGAINST='https://github.com/${{ github.repository }}.git#branch=${{ github.base_ref }},subdir=proto'
+        run: |
+          mkdir -p build/proto-base
+          git archive "origin/${{ github.base_ref }}" proto | tar -x -C build/proto-base
+          cp proto/buf.lock build/proto-base/proto/buf.lock
+          make proto-check-breaking PROTO_BREAKING_AGAINST=../build/proto-base/proto

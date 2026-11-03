@@ -240,7 +240,7 @@ proto-lint:
 PROTO_BREAKING_AGAINST ?= .git\#branch=main,subdir=proto
 
 proto-check-breaking:
-	@$(protoImage) sh -c "cd proto && buf breaking --against '$(PROTO_BREAKING_AGAINST)'"
+	@$(protoImage) sh -c "cd proto && buf breaking --against '$(PROTO_BREAKING_AGAINST)' --exclude-imports"
 
 .PHONY: proto-all proto-gen proto-format proto-lint proto-check-breaking
 
