@@ -1,0 +1,5 @@
+# Normalize line endings: shell scripts and the Makefile must keep LF to run in
+# Linux containers even when the repo is checked out on Windows.
+* text=auto eol=lf
+*.wasm binary
+*.a binary

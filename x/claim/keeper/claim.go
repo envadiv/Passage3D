@@ -5,13 +5,12 @@ import (
 
 	"cosmossdk.io/store/prefix"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/envadiv/Passage3D/x/claim/types"
-	"github.com/gogo/protobuf/proto"
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GetModuleAccountAddress gets module account address of claim module
@@ -25,10 +24,16 @@ func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
 	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, types.DefaultClaimDenom)
 }
 
-// CreateModuleAccount creates the module account with amount
+// CreateModuleAccount creates the module account (if it does not exist yet) and
+// mints amount into it when the account holds no balance.
+//
+// The account is obtained through AccountKeeper.GetModuleAccount, which assigns
+// a fresh, unique account number. Building it with NewEmptyModuleAccount and
+// writing it with SetModuleAccount (the pre-v4.0.4 behaviour) gave it account
+// number 0, which collides with the first genesis account under the SDK v0.50
+// unique account-number index ("index uniqueness constrain violation: 0").
 func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
-	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+	k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 
 	mintCoins := sdk.NewCoins(amount)
 
@@ -257,22 +262,35 @@ func (k Keeper) fundRemainingToCommunity(ctx sdk.Context) error {
 	return k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
 }
 
+// EndAirdrop sends the unclaimed airdrop balance to the community pool, removes
+// all claim records and disables the airdrop so that EndBlocker stops calling
+// EndAirdrop on every subsequent block.
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {
-	err := k.fundRemainingToCommunity(ctx)
-	if err != nil {
-		return err
+	if balance := k.GetModuleAccountBalance(ctx); balance.IsPositive() {
+		if err := k.fundRemainingToCommunity(ctx); err != nil {
+			return err
+		}
 	}
 	k.ClearInitialClaimables(ctx)
+
+	params := k.GetParams(ctx)
+	params.AirdropEnabled = false
+	k.SetParams(ctx, params)
 	return nil
 }
 
-// ClearClaimables clear claimable amounts
+// ClearInitialClaimables removes every claim record. Keys are collected first and
+// deleted afterwards, because writing to a store while iterating over it is not
+// supported by every store implementation.
 func (k Keeper) ClearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := storetypes.KVStorePrefixIterator(store, types.ClaimRecordsStorePrefix)
-	defer iterator.Close()
+	var keys [][]byte
 	for ; iterator.Valid(); iterator.Next() {
-		key := iterator.Key()
+		keys = append(keys, iterator.Key())
+	}
+	iterator.Close()
+	for _, key := range keys {
 		store.Delete(key)
 	}
 }

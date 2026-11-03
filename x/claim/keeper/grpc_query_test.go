@@ -2,32 +2,33 @@ package keeper_test
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
-	"time"
 
-	"github.com/envadiv/Passage3D/x/claim/types"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/envadiv/Passage3D/x/claim/types"
 )
 
 func (suite *KeeperTestSuite) TestGrpcQueryParams() {
-	grpcClient := suite.queryClient
-
-	resp, _ := grpcClient.Params(context.Background(), &types.QueryParamsRequest{})
-	suite.Require().Equal(resp.GetParams().ClaimDenom, types.DefaultClaimDenom)
+	resp, err := suite.queryClient.Params(context.Background(), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.DefaultClaimDenom, resp.GetParams().ClaimDenom)
+	suite.Require().True(resp.GetParams().AirdropEnabled)
 }
 
 func (suite *KeeperTestSuite) TestGrpcQueryModuleAccountBalance() {
-	grpcClient := suite.queryClient
-
-	resp, _ := grpcClient.ModuleAccountBalance(context.Background(), &types.QueryModuleAccountBalanceRequest{})
-	suite.Require().Equal(resp.ModuleAccountBalance.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdkmath.NewInt(10000000))).String())
+	resp, err := suite.queryClient.ModuleAccountBalance(context.Background(), &types.QueryModuleAccountBalanceRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(
+		sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdkmath.NewInt(10000000))).String(),
+		resp.ModuleAccountBalance.String(),
+	)
 }
 
 func (suite *KeeperTestSuite) TestGrpcQueryClaimRecords() {
-	grpcClient, ctx, k := suite.queryClient, suite.ctx, suite.app.ClaimKeeper
-	ctx = ctx.WithBlockTime(time.Now())
+	grpcClient, k := suite.queryClient, suite.app.ClaimKeeper
 
 	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	addr2 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
@@ -45,15 +46,44 @@ func (suite *KeeperTestSuite) TestGrpcQueryClaimRecords() {
 		},
 	}
 
-	err := k.SetClaimRecords(ctx, claimRecords)
+	err := k.SetClaimRecords(suite.ctx, claimRecords)
 	suite.Require().NoError(err)
 
 	resp, err := grpcClient.ClaimRecord(context.Background(), &types.QueryClaimRecordRequest{Address: addr1.String()})
 	suite.Require().NoError(err)
-	suite.Require().Equal(resp.GetClaimRecord(), claimRecords[0])
+	suite.Require().Equal(claimRecords[0], resp.GetClaimRecord())
 
-	//// get claim record for action
-	//actionResp, err := grpcClient.TotalClaimable(context.Background(), &types.QueryTotalClaimableRequest{Address: addr1.String()})
-	//suite.Require().NoError(err)
-	//suite.Require().Equal(actionResp.String(), sdk.NewCoins(sdk.NewCoin(types.DefaultClaimDenom, sdkmath.NewInt(100))).String())
+	actionResp, err := grpcClient.ClaimableForAction(context.Background(), &types.QueryClaimableForActionRequest{
+		Address: addr2.String(),
+		Action:  types.InitialClaim,
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal("200upasg", actionResp.Amount.String())
+
+	totalResp, err := grpcClient.TotalClaimable(context.Background(), &types.QueryTotalClaimableRequest{Address: addr1.String()})
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(types.DefaultClaimDenom, 100)).String(), totalResp.Coins.String())
+
+	// unknown addresses have no claim record
+	addr3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	resp, err = grpcClient.ClaimRecord(context.Background(), &types.QueryClaimRecordRequest{Address: addr3.String()})
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ClaimRecord{}, resp.GetClaimRecord())
+}
+
+func (suite *KeeperTestSuite) TestGrpcQueryInvalidRequests() {
+	ctx := context.Background()
+
+	_, err := suite.queryClient.ClaimRecord(ctx, &types.QueryClaimRecordRequest{Address: "invalid"})
+	suite.Require().Error(err)
+
+	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	_, err = suite.queryClient.ClaimableForAction(ctx, &types.QueryClaimableForActionRequest{
+		Address: addr.String(),
+		Action:  "ActionUnknown",
+	})
+	suite.Require().ErrorContains(err, "invalid action type")
+
+	_, err = suite.queryClient.TotalClaimable(ctx, &types.QueryTotalClaimableRequest{Address: "invalid"})
+	suite.Require().Error(err)
 }

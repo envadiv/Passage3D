@@ -1,10 +1,10 @@
 package v2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"context"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"

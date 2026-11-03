@@ -5,24 +5,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"cosmossdk.io/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	simcmd "github.com/envadiv/Passage3D/cmd/passage/cmd"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	simapp "github.com/envadiv/Passage3D/app"
+
+	"github.com/envadiv/Passage3D/app"
+	passagecmd "github.com/envadiv/Passage3D/cmd/passage/cmd"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
@@ -53,7 +53,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		{
 			name:        "multiple denoms",
 			addr:        addr1.String(),
-			denom:       "1000atom, 2000stake",
+			denom:       "1000atom, 2000upasg",
 			withKeyring: false,
 			expectErr:   false,
 		},
@@ -67,18 +67,16 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
-			logger := log.NewNopLogger()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
-			appCodec := simapp.MakeEncodingConfig().Marshaler
+			appCodec := app.MakeEncodingConfig().Marshaler
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
-			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			serverCtx := server.NewContext(viper.New(), cfg, log.NewNopLogger())
 			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home)
 
 			if tc.withKeyring {
@@ -94,11 +92,12 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := simcmd.AddGenesisAccountCmd(home)
+			cmd := passagecmd.AddGenesisAccountCmd(home)
 			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,
-				fmt.Sprintf("--%s=home", flags.FlagHome)})
+				fmt.Sprintf("--%s=%s", flags.FlagHome, home),
+			})
 
 			if tc.expectErr {
 				require.Error(t, cmd.ExecuteContext(ctx))

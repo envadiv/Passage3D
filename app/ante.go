@@ -1,12 +1,11 @@
 package app
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	corestoretypes "cosmossdk.io/core/store"
 	circuitante "cosmossdk.io/x/circuit/ante"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -19,11 +18,12 @@ import (
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	TxCounterStoreKey storetypes.StoreKey
-	WasmConfig        wasmtypes.NodeConfig
-	IBCKeeper         *ibckeeper.Keeper
-	Codec             codec.Codec
-	CircuitKeeper     circuitante.CircuitBreaker
+	TXCounterStoreService corestoretypes.KVStoreService
+	WasmConfig            wasmtypes.NodeConfig
+	WasmKeeper            *wasmkeeper.Keeper
+	IBCKeeper             *ibckeeper.Keeper
+	Codec                 codec.Codec
+	CircuitKeeper         circuitante.CircuitBreaker
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -42,6 +42,22 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, sdkerrors.ErrLogic.Wrap("sign mode handler is required for ante builder")
 	}
 
+	if options.WasmKeeper == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("wasm keeper is required for ante builder")
+	}
+
+	if options.TXCounterStoreService == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("wasm store service is required for ante builder")
+	}
+
+	if options.CircuitKeeper == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("circuit keeper is required for ante builder")
+	}
+
+	if options.Codec == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("codec is required for ante builder")
+	}
+
 	sigGasConsumer := options.SigGasConsumer
 	if sigGasConsumer == nil {
 		sigGasConsumer = ante.DefaultSigVerificationGasConsumer
@@ -51,8 +67,14 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
-		wasmkeeper.NewCountTXDecorator(runtime.NewKVStoreService(options.TxCounterStoreKey.(*storetypes.KVStoreKey))),
+		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreService),
+		// Stores the wasm gas register in the context. Required by
+		// wasmtypes.StoreCodeAuthorization (authz MsgExec of a gzipped MsgStoreCode).
+		wasmkeeper.NewGasRegisterDecorator(options.WasmKeeper.GetGasRegister()),
 		ante.NewExtensionOptionsDecorator(nil),
+		// CheckTx only: rejects txs when the node runs with minimum-gas-prices below
+		// the Passage floor (12.5upasg), as in v2.x.
+		passageante.NewValidateMinGasPricesDecorator(),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),

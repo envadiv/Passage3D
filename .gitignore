@@ -13,3 +13,8 @@ sim_log_file
 # IDE
 .vscode
 .idea
+# Local networks and tooling
+mytestnet
+dist
+.serena
+*.stackdump

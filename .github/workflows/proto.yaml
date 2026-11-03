@@ -1,21 +1,32 @@
 name: Protobuf
-# Protobuf runs buf (https://buf.build/) lint and check-breakage
-# This workflow is only run when a .proto file has been changed
+# buf (https://buf.build/) lint and breaking-change check, on pull requests changing protobuf files.
 on:
   pull_request:
     paths:
-      - '**.proto'
+      - "**.proto"
+      - "proto/buf.*"
+      - "buf.work.yaml"
 jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: lint
         run: make proto-lint
   breakage:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
-      - name: check-breakage
-        run: make proto-check-breaking
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      # The base branch's buf.lock can pin BSR commits that no longer exist, which makes
+      # its protos unbuildable as they are. Compare against the base protos built with the
+      # dependencies of this pull request.
+      - name: check-breakage against the pull request base
+        run: |
+          mkdir -p build/proto-base
+          git archive "origin/${{ github.base_ref }}" proto | tar -x -C build/proto-base
+          cp proto/buf.lock build/proto-base/proto/buf.lock
+          make proto-check-breaking PROTO_BREAKING_AGAINST=../build/proto-base/proto

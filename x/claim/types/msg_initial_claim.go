@@ -48,5 +48,9 @@ func (msg MsgClaim) ValidateBasic() error {
 	if len(msg.ClaimAction) == 0 {
 		return sdkerrors.ErrNotFound.Wrapf("empty action, action type is required")
 	}
+	// An unknown action used to be mapped to ActionInitialClaim (0) by the msg server.
+	if _, ok := Action_value[msg.ClaimAction]; !ok {
+		return sdkerrors.ErrInvalidRequest.Wrapf("unknown claim action %q", msg.ClaimAction)
+	}
 	return nil
 }

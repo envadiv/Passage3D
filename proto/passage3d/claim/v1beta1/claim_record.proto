@@ -3,9 +3,8 @@ package passage3d.claim.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/bank/v1beta1/genesis.proto";
 
-option go_package = "github.com/envadiv/passage3d/x/claim/types";
+option go_package = "github.com/envadiv/Passage3D/x/claim/types";
 
 // A Claim Records is the metadata of claim data per address
 message ClaimRecord {

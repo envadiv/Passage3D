@@ -4,19 +4,35 @@ on:
   pull_request:
   push:
     branches:
+      - main
       - v4.0.x
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.14'
       - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Display go version
-        run: go version
+        uses: actions/checkout@v5
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          # Same toolchain as the release build (scripts/build-security-release.sh).
+          go-version: '1.25.14'
       - name: make build
         run: make build
+      - name: passage version
+        run: ./build/passage version --long
+
+  docker:
+    name: Docker image (static musl binary)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: docker build
+        run: docker build -t passage:ci .
+      - name: smoke test
+        run: docker run --rm passage:ci passage version --long

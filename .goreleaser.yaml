@@ -31,14 +31,14 @@ builds:
     flags:
       - -mod=readonly
       - -trimpath
-      - -tags=netgo,muslc
+      - -tags=netgo,ledger,muslc
     ldflags:
       - -s -w
       - -X github.com/cosmos/cosmos-sdk/version.Name=passage
       - -X github.com/cosmos/cosmos-sdk/version.AppName=passage
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .FullCommit }}
-      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,muslc
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc
       - -linkmode=external
       - -extldflags '-Wl,-z,muldefs -static -lm'
 
@@ -53,14 +53,14 @@ builds:
     flags:
       - -mod=readonly
       - -trimpath
-      - -tags=netgo,muslc
+      - -tags=netgo,ledger,muslc
     ldflags:
       - -s -w
       - -X github.com/cosmos/cosmos-sdk/version.Name=passage
       - -X github.com/cosmos/cosmos-sdk/version.AppName=passage
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .FullCommit }}
-      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,muslc
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc
       - -linkmode=external
       - -extldflags '-Wl,-z,muldefs -static -lm'
 

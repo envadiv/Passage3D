@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -42,7 +43,20 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 	},
 }
 
-var emptyWasmOptions []wasm.Option = nil
+var emptyWasmOptions []wasmkeeper.Option = nil
+
+// NewTestApp returns a PassageApp on an in-memory DB whose home (wasm cache) is a
+// fresh temporary directory, so tests never touch ~/.passage.
+func NewTestApp(invCheckPeriod uint) *PassageApp {
+	home, err := os.MkdirTemp("", "passage-test-app")
+	if err != nil {
+		panic(err)
+	}
+	return NewPassageApp(
+		log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{}, home,
+		invCheckPeriod, MakeEncodingConfig(), nil, EmptyAppOptions{}, emptyWasmOptions,
+	)
+}
 
 func setup(withGenesis bool, invCheckPeriod uint, home string) (*PassageApp, GenesisState) {
 	db := dbm.NewMemDB()
@@ -102,7 +116,7 @@ func setupWithGenesisValSet(home string, valSet *tmtypes.ValidatorSet, genAccs [
 	bondAmt := sdk.DefaultPowerReduction
 
 	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		if err != nil {
 			panic(err)
 		}
@@ -151,30 +165,25 @@ func setupWithGenesisValSet(home string, valSet *tmtypes.ValidatorSet, genAccs [
 		panic(err)
 	}
 
-	_, err = app.InitChain(
+	if _, err := app.InitChain(
 		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
-	)
-
-	if err != nil {
+	); err != nil {
 		panic(err)
 	}
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+
+	// SDK v0.50 ABCI order: InitChain -> FinalizeBlock(1) -> Commit.
+	if _, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
-	})
-	if err != nil {
+	}); err != nil {
 		panic(err)
 	}
-
 	if _, err := app.Commit(); err != nil {
-		panic(err)
-	}
-	if _, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2, Time: time.Now().UTC(), NextValidatorsHash: valSet.Hash()}); err != nil {
 		panic(err)
 	}
 
