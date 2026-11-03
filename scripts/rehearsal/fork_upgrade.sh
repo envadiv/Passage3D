@@ -32,12 +32,25 @@ for t in jq curl; do command -v $t >/dev/null || die "missing tool: $t"; done
 [ -d "$SRC_HOME/data" ] && [ -d "$SRC_HOME/config" ] || die "SRC_HOME has no data/ or config/"
 [ -d "$SRC_HOME/wasm" ] || die "SRC_HOME has no wasm/ (contract code)"
 [ -e "$H" ] && die "$H exists; use an empty WORK"
-if pgrep -af 'passage.* start' | grep -qF -- "$SRC_HOME"; then
+# A node started without --home (e.g. `ExecStart=/usr/bin/passage start`) uses ~/.passage of
+# the user it runs as, so its command line does not name SRC_HOME.
+running_on_src() {
+  local pid args home
+  pgrep -af 'passage.* start' | grep -qF -- "$SRC_HOME" && return 0
+  for pid in $(pgrep -f 'passage.* start'); do
+    args=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null) || continue
+    case "$args" in *--home*) continue ;; esac
+    home=$(getent passwd "$(stat -c %U "/proc/$pid")" | cut -d: -f6)
+    [ -n "$home" ] && [ "$(readlink -f "$home/.passage")" = "$(readlink -f "$SRC_HOME")" ] && return 0
+  done
+  return 1
+}
+if running_on_src; then
   [ "${FORCE:-0}" = 1 ] || die "a node is running on SRC_HOME; stop it or use a snapshot (FORCE=1 to override)"
 fi
 need=$(du -sk "$SRC_HOME/data" "$SRC_HOME/wasm" | awk '{s += $1} END {print s}')
 avail=$(df -Pk "$WORK" | awk 'NR == 2 {print $4}')
-echo "state: $((need / 1048576)) GiB, free in WORK: $((avail / 1048576)) GiB"
+echo "state: $((need / 1024)) MiB, free in WORK: $((avail / 1048576)) GiB"
 [ "$avail" -gt "$need" ] || echo "WARNING: not enough free space for a full copy; works only if cp --reflink applies"
 
 step "copy (reflink when the filesystem supports it)"
@@ -120,9 +133,15 @@ echo "libwasmvm: $V"; [ -n "$V" ] && ok "libwasmvm $V loaded" || bad "libwasmvm 
 
 step "transactions and queries on the upgraded fork"
 TX="--from operator $KR --chain-id $CHAIN --node $RPC --gas auto --gas-adjustment 1.5 --gas-prices 12.5upasg -y -o json"
-R=$("$NEW_BIN" tx bank send operator "$OP" 1upasg $TX 2>"$OUT/tx.err"); HASH=$(echo "$R" | jq -r .txhash 2>/dev/null)
-for _ in $(seq 1 60); do [ "$(q "$NEW_BIN" tx "$HASH" | jq -r .code)" = 0 ] && break; sleep 1; done
-[ "$(q "$NEW_BIN" tx "$HASH" | jq -r .code)" = 0 ] && ok "bank send" || bad "bank send: $(tail -c 200 "$OUT/tx.err") $(echo "$R" | tail -c 200)"
+# Many nodes run with indexer = "null" and the copy inherits it, so the transaction is not
+# looked up by hash: a new account must receive the amount.
+"$NEW_BIN" keys add probe $KR >/dev/null 2>&1; PROBE=$("$NEW_BIN" keys show probe -a $KR)
+upasg() { q "$NEW_BIN" bank balances "$1" | jq -r '[.balances[]? | select(.denom == "upasg") | .amount][0] // "0"'; }
+R=$("$NEW_BIN" tx bank send operator "$PROBE" 1upasg $TX 2>"$OUT/tx.err"); C=$(echo "$R" | jq -r .code 2>/dev/null)
+for _ in $(seq 1 60); do [ "$(upasg "$PROBE")" = 1 ] && break; sleep 1; done
+B=$(upasg "$PROBE")
+[ "$C" = 0 ] && [ "$B" = 1 ] && ok "bank send (a new account received 1upasg)" \
+  || bad "bank send: code ${C:-none}, received ${B:-?}upasg: $(tail -c 200 "$OUT/tx.err") $(echo "$R" | tail -c 200)"
 : > "$OUT/smart-queries.txt"
 for c in $(cut -d' ' -f2 "$OUT/after/contracts.txt"); do
   r=1
