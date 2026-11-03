@@ -202,6 +202,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 	)
 
 	server.AddCommands(rootCmd, app.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	addInPlaceTestnetCommand(rootCmd, a)
 	// `passage comet unsafe-reset-all` also clears the wasm directory.
 	wasmcli.ExtendUnsafeResetAllCmd(rootCmd)
 
