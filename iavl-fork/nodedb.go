@@ -865,8 +865,14 @@ func (ndb *nodeDB) resetLatestVersion(version int64) {
 }
 
 // hasVersion checks if the given version exists.
+// NOTE(passage v4.0.4 fix): an EMPTY tree stores its native root with a
+// zero-length value, which db.Has() reports as absent. getFirstVersion relies on
+// hasVersion, so empty stores (x/evidence, x/feegrant, x/circuit, ...) reported
+// only their latest version as available: historical queries (--height),
+// `export --height` and `rollback` failed with "version does not exist". Use the
+// same value-agnostic check as hasLegacyVersion/GetRoot.
 func (ndb *nodeDB) hasVersion(version int64) (bool, error) {
-	return ndb.db.Has(nodeKeyFormat.Key(GetRootKey(version)))
+	return ndb.keyExists(nodeKeyFormat.Key(GetRootKey(version)))
 }
 
 // hasLegacyVersion checks if the given version exists in the legacy format.
