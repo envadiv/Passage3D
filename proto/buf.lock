@@ -4,28 +4,20 @@ deps:
   - remote: buf.build
     owner: cosmos
     repository: cosmos-proto
-    branch: main
-    commit: 1935555c206d4afb9e94615dfd0fad31
-    digest: b1-TNqW6xj2Pjha5Uoj9a-5uOeRo4mwswKfyqMcN3I_gZ0=
-    create_time: 2021-12-02T22:04:00.31049Z
+    commit: 04467658e59e44bbb22fe568206e1f70
+    digest: shake256:73a640bd60e0c523b0f8237ff34eab67c45a38b64bbbde1d80224819d272dbf316ac183526bd245f994af6608b025f5130483d0133c5edd385531326b5990466
   - remote: buf.build
     owner: cosmos
     repository: cosmos-sdk
-    branch: main
-    commit: af8d763f189a4482b59f9f283b446293
-    digest: b1-_yAm1-e1B5X3nv4-_DX5VR8YY0C_A42zokN3WshF9IE=
-    create_time: 2022-01-05T19:59:53.846919Z
+    commit: 5a6ab7bc14314acaa912d5e53aef1c2f
+    digest: shake256:02c00c73493720055f9b57553a35b5550023a3c1914123b247956288a78fb913aff70e66552777ae14d759467e119079d484af081264a5dd607a94d9fbc8116b
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto
-    branch: main
-    commit: bee5511075b7499da6178d9e4aaa628b
-    digest: b1-rrBIustouD-S80cVoZ_rM0qJsmei9AgbXy9GPQu6vxg=
-    create_time: 2021-12-02T20:01:17.069307Z
+    commit: 88ef6483f90f478fb938c37dde52ece3
+    digest: shake256:89c45df2aa11e0cff97b0d695436713db3d993d76792e9f8dc1ae90e6ab9a9bec55503d48ceedd6b86069ab07d3041b32001b2bfe0227fa725dd515ff381e5ba
   - remote: buf.build
     owner: googleapis
     repository: googleapis
-    branch: main
-    commit: 4bdf33e750fb409da9d403e1e98031f4
-    digest: b1-nRh8ZFyOdE0aPKb2J5eIo9Z6p6dkcuVuc3ug-17r_KU=
-    create_time: 2022-01-27T15:08:58.860206Z
+    commit: 8ac61b9e502343289c8c42b17aa5b245
+    digest: shake256:30840693e3b5edac0f461e7168da1057b36a5df75d2d0c6fd920f8442a2f51afb22c955ad5afc25a1394f6e2de65d623844594a37d9f9ce093c48d6afe6a3e55

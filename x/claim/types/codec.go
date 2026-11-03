@@ -22,7 +22,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 var (
 	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(amino)
+	ModuleCdc = codec.NewAminoCodec(amino) //nolint:staticcheck // amino JSON codec for the legacy (Ledger) sign bytes of MsgClaim
 )
 
 func init() {

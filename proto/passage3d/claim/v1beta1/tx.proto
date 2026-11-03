@@ -3,18 +3,30 @@ package passage3d.claim.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "amino/amino.proto";
 
-option go_package = "github.com/envadiv/passage3d/x/claim/types";
+option go_package = "github.com/envadiv/Passage3D/x/claim/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // InitialClaim defines RPC service for claim
   rpc Claim(MsgClaim) returns (MsgClaimResponse);
 }
 
 // MsgInitialClaim defines request message for InitialClaim RPC request
 message MsgClaim {
-  string sender = 1;
+  // Required since Cosmos SDK v0.50: the x/tx signing context resolves the
+  // signer from this annotation (legacy GetSigners() is no longer used).
+  option (cosmos.msg.v1.signer) = "sender";
+  // Keeps the Amino JSON type name used by v2.x ("claim/Claim") so Ledger and
+  // Amino-signing wallets produce the same sign bytes as the node.
+  option (amino.name) = "claim/Claim";
+
+  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string claim_action = 2;
 }
 
