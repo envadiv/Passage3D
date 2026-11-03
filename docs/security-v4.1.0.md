@@ -1,7 +1,8 @@
 # Passage v4.1.0 security upgrade candidate
 
-Prepared 2026-10-08. **Candidate only: do not activate on mainnet until a recent
-mainnet-state rehearsal and validator coordination are complete.** The proposed
+Prepared 2026-10-08. **Candidate only: do not activate on mainnet until validator
+coordination is complete.** The mainnet-state rehearsal was done on 2026-11-03 with
+`v4.1.0-rc1` ([`v4.1.0-upgrade/REHEARSAL.md`](v4.1.0-upgrade/REHEARSAL.md)). The proposed
 plan name is `v4.1.0`; the candidate binary version is `v4.1.0-rc1`.
 
 ## Why this upgrade
@@ -69,7 +70,7 @@ consensus-breaking on their own and would otherwise need a separate upgrade:
 | CosmWasm Amino signing | Amino JSON sign bytes of wasm messages match the Amino clients (CosmWasm/wasmd#1844 and #1860, part of wasmd since v0.51). Ledger / Keplr / Leap Amino / CosmJS Amino-signed wasm transactions are accepted again; covered by `app/params/amino_contract_signing_test.go`. |
 | x/gov | Legacy proposal router restored (`TextProposal`, x/params `ParameterChangeProposal`); x/claim params can be changed by governance again. |
 | x/claim | `MsgClaim` signer and amino annotations (claim transactions were rejected since v4.0.0); unknown claim actions rejected; the module account is created with a unique account number; an expired airdrop is disabled once instead of `EndAirdrop` running on every block. |
-| Account numbers | The handler runs `FixDuplicateAccountNumbers`: on passage-2 the claim module account shares account number 0 with the account that owns that index entry; the claim account gets a fresh number and the owner keeps its index entry. Idempotent; covered by `TestUpgradeV410RepairsDuplicateAccountNumber`. |
+| Account numbers | The handler runs `FixDuplicateAccountNumbers`: on passage-2 six accounts (the claim module account and five periodic vesting accounts, four of them multisigs) share account number 0 with the account that owns that index entry; each gets a fresh number and the owner keeps its index entry. Balances, keys, sequences and vesting schedules do not change; signatures made for those accounts before the upgrade must be made again. Idempotent; covered by `TestUpgradeV410RepairsDuplicateAccountNumber` and the mainnet-state rehearsal (`v4.1.0-upgrade/rehearsal/accounts.txt`). |
 | Ante | wasm `GasRegisterDecorator`; the blocked multisig can no longer bypass its restriction with a leading `MsgFundCommunityPool`; CheckTx minimum gas price floor of 12.5upasg. |
 
 Non-consensus fixes in the same binary: `export --for-zero-height`, rollback and

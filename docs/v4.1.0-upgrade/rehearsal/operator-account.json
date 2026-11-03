@@ -1,0 +1,14 @@
+{
+  "account": {
+    "type": "cosmos-sdk/BaseAccount",
+    "value": {
+      "address": "pasg1gyvvnzh5qmvvgzfamw0ppqq9cp64n4kp89u24v",
+      "public_key": {
+        "type": "tendermint/PubKeySecp256k1",
+        "value": "Aqn6YrOU9VHCgOVT1PoWx02dQqgXAa3t4uv2Idj+Qe4n"
+      },
+      "account_number": "11250",
+      "sequence": "1"
+    }
+  }
+}

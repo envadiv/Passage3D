@@ -1,0 +1,16 @@
+# passage-2 accounts that share account number 0, before and after the v4.1.0 upgrade.
+# mainnet: the source node (v4.0.3), queried 2026-11-03 17:33 UTC.
+# fork:    the upgraded copy (v4.1.0-rc1), queried at the same time.
+# Every other field of each account (type, public key, sequence, vesting periods,
+# original/delegated vesting) and its bank balance are identical on mainnet and on the fork.
+# The numbers on the fork come from the fork's account-number sequence; on mainnet the
+# accounts get the next free numbers at the upgrade height.
+#
+# address                                       type                     mainnet fork  sequence  multisig  balance (upasg)
+pasg1lel0s624jr9zsz4ml6yv9e5r4uzukfs7hwh22w     PeriodicVestingAccount   0       0     2         yes       0
+pasg1dnn9gvrjr2rxwma5n0mrcdz08xld0mjr56ktxf     PeriodicVestingAccount   0       11251 27        yes       19566826514066
+pasg1nvqpvagr7r8t3s7ncmqu904wtwhc9uddvjrgzz     PeriodicVestingAccount   0       11252 12        yes       40037765
+pasg1nma4rcj9nly549jjtmnra0x0n6a9dvg3cp0a4y     PeriodicVestingAccount   0       11253 14        yes       42419746
+pasg14ngd35ndr0ajxfw5k79zpt3hatwcanygtds5w7     PeriodicVestingAccount   0       11254 14        yes       11095725920075
+pasg1cn5rqy7psjm7h60y8524afvffuktllxh947tx0     PeriodicVestingAccount   0       11255 0         no key    100055557554660
+pasg1m5dncvfv7lvpvycr23zja93fecun2kcvpfszyd     ModuleAccount (claim)    0       11256 0         -         0

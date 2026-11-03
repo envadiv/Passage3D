@@ -1,0 +1,13 @@
+PASS: copy isolated (new keys, no peers, localhost ports +1000)
+PASS: old binary produces blocks (height 21712868); v4.1.0 scheduled at 21712886
+PASS: old binary halts at the upgrade height
+PASS: new binary produces blocks after the upgrade (height 21712889)
+PASS: upgrade handler v4.1.0 applied
+PASS: wasm code hashes unchanged
+PASS: raw state of every contract unchanged
+KNOWN: module versions changed by the upgrade: ibc 5->6
+PASS: duplicate account number repaired (claim 0 -> 11256, number 0 kept by pasg1lel0s624jr9zsz4ml6yv9e5r4uzukfs7hwh22w)
+PASS: libwasmvm 2.2.9 loaded
+FAIL: bank send: gas estimate: 96043 CFF227EE96C2B2C727B7991AA471E51327A4A6DCA330BAD180D6DADCF350E","codespace":"","code":0,"data":"","raw_log":"","logs":[],"info":"","gas_wanted":"0","gas_used":"0","tx":null,"timestamp":"","events":[]}
+PASS: smart queries answered by all 79 contracts
+PASS: node restarts and continues (height 21712910)

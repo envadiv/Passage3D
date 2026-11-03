@@ -14,10 +14,12 @@
   CWA-2026-006, a Wasmer Singlepass sandbox escape that can lead to native token minting,
   and CWA-2026-005. Restricting code uploads does not fix code that is already stored.
 - **Fixes since v4.0.0:** Ledger / Amino-signed CosmWasm transactions accepted again;
-  `MsgClaim` accepted again; legacy governance proposals restored; the duplicate account
-  number of the claim module account repaired by the upgrade handler.
+  `MsgClaim` accepted again; legacy governance proposals restored; duplicate account numbers
+  repaired by the upgrade handler (see [Accounts that get a new account number](#accounts-that-get-a-new-account-number)).
 - Cosmos SDK v0.50.15, ibc-go v8.8.0 (ibc module migration 5 -> 6). Contract code and state
   are preserved. Details: `docs/security-v4.1.0.md`.
+- Rehearsed on a copy of passage-2 state (height 21712866, 33 codes, 79 contracts): every
+  check passes. Report: [`REHEARSAL.md`](REHEARSAL.md).
 
 ## What changes for operators
 
@@ -79,6 +81,27 @@ passage status | jq '.sync_info'              # catching_up false, height increa
 
 Then confirm signing (block explorer or `passage q slashing signing-info`), contract queries
 and IBC relaying.
+
+## Accounts that get a new account number
+
+On passage-2 six accounts share account number 0 with
+`pasg1lel0s624jr9zsz4ml6yv9e5r4uzukfs7hwh22w`, the account that owns that number. The upgrade
+handler gives each of them the next free account number; their balances, keys, sequences and
+vesting schedules do not change.
+
+| Account | Type |
+|---|---|
+| `pasg1m5dncvfv7lvpvycr23zja93fecun2kcvpfszyd` | claim module account |
+| `pasg1dnn9gvrjr2rxwma5n0mrcdz08xld0mjr56ktxf` | periodic vesting, multisig |
+| `pasg1nvqpvagr7r8t3s7ncmqu904wtwhc9uddvjrgzz` | periodic vesting, multisig |
+| `pasg1nma4rcj9nly549jjtmnra0x0n6a9dvg3cp0a4y` | periodic vesting, multisig |
+| `pasg14ngd35ndr0ajxfw5k79zpt3hatwcanygtds5w7` | periodic vesting, multisig |
+| `pasg1cn5rqy7psjm7h60y8524afvffuktllxh947tx0` | periodic vesting (no public key yet) |
+
+Signers of these accounts: signatures made before the upgrade with account number 0, including
+partially signed multisig transactions, are invalid after it. Sign again after the upgrade;
+with `--offline`, take the account number from `passage q auth account <address>`. Wallets and
+`passage tx` without `--offline` read the new number from the chain.
 
 ## Rollback
 

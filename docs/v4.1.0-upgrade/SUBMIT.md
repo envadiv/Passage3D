@@ -21,12 +21,15 @@ Average block time: ~5.77 s (10,000 blocks up to height 21,704,696).
 1. The release commit on `v4.0.x` passes CI (unit tests, sims, in-place upgrade, security
    upgrade rehearsal on amd64 and arm64).
 2. Mainnet-state rehearsal done (`scripts/rehearsal/fork_upgrade.sh`, see `scripts/rehearsal/README.md`;
-   run on a server that holds a passage-2 node).
-3. Tag `v4.1.0` pushed; `release.yml` created the draft release. Review it and publish it.
+   run on a server that holds a passage-2 node). Done on 2026-11-03 with v4.1.0-rc1:
+   [`REHEARSAL.md`](REHEARSAL.md). If the final tag is not the rehearsed commit, rehearse again.
+3. The holders of the accounts listed in `VALIDATORS.md` (Accounts that get a new account
+   number) are told before the upgrade height that their account number changes.
+4. Tag `v4.1.0` pushed; `release.yml` created the draft release. Review it and publish it.
    It contains, per architecture: `passage-4.1.0-linux-<arch>`, `libwasmvm.<x86_64|aarch64>.so`,
    `passage-4.1.0-linux-<arch>.tar.gz` (binary + library + provenance + checksums) and
    `SHA256SUMS.txt`.
-4. Fill `proposal_v4.1.0.json`:
+5. Fill `proposal_v4.1.0.json`:
    - `PENDING_SHA256_AMD64_TAR_GZ` / `PENDING_SHA256_ARM64_TAR_GZ`: `sha256sum passage-4.1.0-linux-*.tar.gz`
      of the published assets;
    - `PENDING_HEIGHT` (twice: `plan.height` and `summary`), computed the day of submission:
@@ -37,7 +40,7 @@ Average block time: ~5.77 s (10,000 blocks up to height 21,704,696).
      echo $(( H + (1 + 1) * 86400 * 100 / 577 ))     # expedited: about 29,950 blocks
      ```
      Check the resulting date against the block time of the last days and announce it in UTC.
-5. For an expedited proposal set `"expedited": true` and the deposit to `1000000000000upasg`.
+6. For an expedited proposal set `"expedited": true` and the deposit to `1000000000000upasg`.
    CWA-2026-006 is critical, which supports the expedited path if the deposit and the 67%
    threshold are achievable; otherwise use the normal 7 days.
 
