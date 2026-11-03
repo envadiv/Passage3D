@@ -61,7 +61,8 @@ Every validator must switch binaries at the upgrade height. See `docs/security-v
 - x/claim: `MsgClaim` has the `cosmos.msg.v1.signer` and `amino.name` ("claim/Claim") annotations
   (claim txs were rejected since v4.0.0); unknown claim actions rejected; the module account is
   created with a unique account number; an expired airdrop is disabled instead of `EndAirdrop` on every block.
-- Upgrade handler: repairs duplicate account numbers (claim module account vs account number 0 on passage-2).
+- Upgrade handler: repairs duplicate account numbers. On passage-2 the claim module account and five
+  periodic vesting accounts share account number 0 with its owner; they get new account numbers.
 - Ante: wasm `GasRegisterDecorator` (authz exec of gzipped `MsgStoreCode`); the blocked community-pool
   multisig can no longer bypass its restriction by adding a `MsgFundCommunityPool` to the tx;
   CheckTx minimum gas price floor (12.5upasg) restored.
