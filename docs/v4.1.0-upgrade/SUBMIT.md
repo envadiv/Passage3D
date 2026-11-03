@@ -20,8 +20,8 @@ Average block time: ~5.77 s (10,000 blocks up to height 21,704,696).
 
 1. The release commit on `v4.0.x` passes CI (unit tests, sims, in-place upgrade, security
    upgrade rehearsal on amd64 and arm64).
-2. Mainnet-state rehearsal done (`scripts/rehearsal/fork_upgrade.sh` on branch
-   `rehearsal/v4.0.3-in-place-testnet`, run on a server that holds a passage-2 node).
+2. Mainnet-state rehearsal done (`scripts/rehearsal/fork_upgrade.sh`, see `scripts/rehearsal/README.md`;
+   run on a server that holds a passage-2 node).
 3. Tag `v4.1.0` pushed; `release.yml` created the draft release. Review it and publish it.
    It contains, per architecture: `passage-4.1.0-linux-<arch>`, `libwasmvm.<x86_64|aarch64>.so`,
    `passage-4.1.0-linux-<arch>.tar.gz` (binary + library + provenance + checksums) and
