@@ -44,7 +44,7 @@
    Compare the checksums with the ones in the proposal `info`.
 2. Check the binary and its library:
    ```sh
-   /tmp/passage-$V/passage-$V-linux-$ARCH version          # 4.1.0
+   /tmp/passage-$V/passage-$V-linux-$ARCH version          # v4.1.0
    /tmp/passage-$V/passage-$V-linux-$ARCH query wasm libwasmvm-version   # 2.2.9
    ```
 3. Stage it. With Cosmovisor, copy **both** files into the upgrade directory, named as below:
@@ -60,6 +60,59 @@
    Without Cosmovisor, keep both files ready and swap them in after the node halts.
 4. Keep the v4.0.3 binary and make sure `minimum-gas-prices >= 12.5upasg`.
 
+### Build from source instead
+
+You need git, make, gcc and Go 1.23.2 or newer (the release is built with Go 1.25.14). The Go
+module and build caches take about 3 GB.
+
+```sh
+git clone https://github.com/envadiv/Passage3D passage-4.1.0
+cd passage-4.1.0
+git checkout v4.1.0
+git rev-parse HEAD     # e5cb0c5554e15ddfb7e60297406ed14756e45026
+make build             # writes build/passage
+./build/passage version --long | grep -E '^(version|commit):'
+# version: 4.1.0
+# commit: e5cb0c5554e15ddfb7e60297406ed14756e45026
+./build/passage query wasm libwasmvm-version   # 2.2.9
+```
+
+- `make build` writes only `build/passage`. Do not run `make install` before the halt: it
+  replaces `$GOPATH/bin/passage`, which may be the binary your node runs.
+- This binary loads libwasmvm 2.2.9 from the Go module cache of the user who built it
+  (`$GOMODCACHE/github.com/!cosm!wasm/wasmvm/v2@v2.2.9/internal/api/`, the same file as in the
+  release). Build it as the user that runs the node and keep that cache. After
+  `go clean -modcache`, or for a user who cannot read the cache, the binary fails with
+  `error while loading shared libraries: libwasmvm.x86_64.so: cannot open shared object file`.
+- It prints version `4.1.0` (the release prints `v4.1.0`) and build tags `netgo,ledger` (the
+  release has `netgo`). Neither affects consensus.
+- Stage `build/passage` as in step 3 (without Cosmovisor, keep it ready for the halt). Do not
+  copy a library.
+
+### Check the release binary against the source (optional)
+
+The release binary is reproducible. This command rebuilds it from the `v4.1.0` tag in Docker,
+with the script, the toolchain and the paths of the release workflow (Ubuntu 22.04, Go 1.25.14),
+and prints the checksums. They must equal the release checksums. It needs about 4 GB of disk.
+
+```sh
+docker run --rm ubuntu:22.04 bash -euc '
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq && apt-get install -y -qq build-essential patchelf curl git ca-certificates >/dev/null
+  G=/opt/hostedtoolcache/go/1.25.14/x64; mkdir -p $G
+  curl -fsSL https://go.dev/dl/go1.25.14.linux-amd64.tar.gz | tar -xz -C $G --strip-components=1
+  export PATH=$G/bin:$PATH HOME=/home/runner GOPATH=/home/runner/go
+  mkdir -p /home/runner/work/Passage3D && cd /home/runner/work/Passage3D
+  git clone -q https://github.com/envadiv/Passage3D && cd Passage3D && git checkout -q v4.1.0
+  VERSION=v4.1.0 bash scripts/build-security-release.sh >/dev/null 2>&1
+  cd build/security-release && sha256sum passage-4.1.0-linux-amd64 libwasmvm.x86_64.so'
+# cad371406cac00cfe6ef99400d8c179f1812743a90fd2ce52db0987fff213885  passage-4.1.0-linux-amd64
+# bfd7157b96028037eb1bdf82b2b7cbf4ebd38a5ab6b1336f0d35c73cf569c783  libwasmvm.x86_64.so
+```
+
+Checked for linux/amd64. With other paths (Go install directory, `GOPATH`, clone directory) the
+binary works but its checksum can differ.
+
 ## At the upgrade height
 
 - v4.0.3 halts with `UPGRADE "v4.1.0" NEEDED at height: PENDING_HEIGHT`.
@@ -73,7 +126,7 @@
 ## After the upgrade
 
 ```sh
-passage version                               # 4.1.0
+passage version                               # v4.1.0 (4.1.0 if built with make build)
 passage query wasm libwasmvm-version          # 2.2.9
 passage q upgrade applied v4.1.0 --node <rpc> # applied height
 passage status | jq '.sync_info'              # catching_up false, height increasing
