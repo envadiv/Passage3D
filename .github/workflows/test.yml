@@ -4,30 +4,41 @@ on:
   pull_request:
   push:
     branches:
+      - main
       - v4.0.x
+
 jobs:
-  tests:
-    name: Tests and code coverage
+  unit:
+    name: Unit tests and coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.14'
       - name: Checkout code
-        uses: actions/checkout@v4
-      - uses: technote-space/get-diff-action@v6.0.1
+        uses: actions/checkout@v5
+      - name: Install Go
+        uses: actions/setup-go@v6
         with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - name: run all tests and generate coverage
-        run: go test -v -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic `go list ./... | grep -v simapp`
-        if: env.GIT_DIFF
+          # Same toolchain as the release build (scripts/build-security-release.sh).
+          go-version: '1.25.14'
+      - name: go vet
+        run: go vet ./...
+      - name: unit tests
+        run: make test-cover
+      - name: Passage tests of the vendored iavl-fork and Amino JSON signing
+        run: make test-forks
       - name: Upload codecov report
-        uses: codecov/codecov-action@v3.1.1
+        uses: codecov/codecov-action@v4
         with:
-          file: coverage.txt
-        if: env.GIT_DIFF
+          files: coverage.txt
+        continue-on-error: true
 
+  upgrade:
+    name: In-place upgrade from the mainnet release
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: upgrade test (docker)
+        run: make test-upgrade
