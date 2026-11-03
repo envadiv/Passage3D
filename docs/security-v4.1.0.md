@@ -47,7 +47,8 @@ that this fork contains every upstream 1.2.4 change.
 
 ## Implementation
 
-- Registers the exact `v4.1.0` upgrade name and runs module migrations.
+- Registers the exact `v4.1.0` upgrade name, repairs duplicate account numbers
+  (see below) and runs module migrations.
 - Adds, removes, or renames no stores. Does not intentionally change tokenomics,
   fees, upload permissions, staking/governance parameters, or contract state.
 - Adapts the Wasm keeper to the new node/VM configuration API, uses the VM's
@@ -57,6 +58,31 @@ that this fork contains every upstream 1.2.4 change.
 - Updates the legacy GoReleaser library pins and provides native amd64/arm64
   build jobs. Tag builds produce a draft release for review. The workflow has
   not been executed remotely during preparation of this candidate.
+
+### Fixes for issues found after v4.0.0
+
+The upgrade also carries the fixes prepared as the v4.0.4 candidate, which are
+consensus-breaking on their own and would otherwise need a separate upgrade:
+
+| Area | Change |
+|---|---|
+| CosmWasm Amino signing | Amino JSON sign bytes of wasm messages match the Amino clients (CosmWasm/wasmd#1844 and #1860, part of wasmd since v0.51). Ledger / Keplr / Leap Amino / CosmJS Amino-signed wasm transactions are accepted again; covered by `app/params/amino_contract_signing_test.go`. |
+| x/gov | Legacy proposal router restored (`TextProposal`, x/params `ParameterChangeProposal`); x/claim params can be changed by governance again. |
+| x/claim | `MsgClaim` signer and amino annotations (claim transactions were rejected since v4.0.0); unknown claim actions rejected; the module account is created with a unique account number; an expired airdrop is disabled once instead of `EndAirdrop` running on every block. |
+| Account numbers | The handler runs `FixDuplicateAccountNumbers`: on passage-2 the claim module account shares account number 0 with the account that owns that index entry; the claim account gets a fresh number and the owner keeps its index entry. Idempotent; covered by `TestUpgradeV410RepairsDuplicateAccountNumber`. |
+| Ante | wasm `GasRegisterDecorator`; the blocked multisig can no longer bypass its restriction with a leading `MsgFundCommunityPool`; CheckTx minimum gas price floor of 12.5upasg. |
+
+Non-consensus fixes in the same binary: `export --for-zero-height`, rollback and
+historical queries on empty stores (iavl-fork `hasVersion`), node service REST
+routes, `SIGN_MODE_TEXTUAL` in the CLI, `config`/`prune`/`snapshots`/`genesis`
+commands, the `[wasm]` app.toml section and `--wasm.*` start flags, and a node
+applies the 12.5upasg floor when `minimum-gas-prices` is lower.
+
+`make test-upgrade` checks these fixes on a two-node chain upgraded in place from
+the v4.0.3 build, and `make test-contracts` runs the `passage-contracts`
+artifacts and every distinct contract code stored on passage-2 across the same
+upgrade (raw contract state compared before and after, in-flight orders,
+auctions and proposals completed after the upgrade, old/new outcomes compared).
 
 ## Build and local rehearsal
 
