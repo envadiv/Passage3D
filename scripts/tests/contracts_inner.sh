@@ -145,7 +145,13 @@ store_all() {
   done
   [ $MN = 1 ] || return 0
   for n in $(printf '%s\n' "${!MAINNET_SHA[@]}" | sort -n); do
-    if store $BIN /mn/code_$n.wasm; then CODE[$P:mn:$n]=$STORED; ok "$P/mn store passage-2 code $n"; else bad "$P/mn store passage-2 code $n: $(why)"; fi
+    if store $BIN /mn/code_$n.wasm; then CODE[$P:mn:$n]=$STORED; ok "$P/mn store passage-2 code $n"
+    elif why | grep -q 'static Wasm validation' && [ -n "${CODE[old:mn:$n]:-}" ]; then
+      # A newer VM can refuse a new upload of code it still runs: passage-2 keeps the code it
+      # already stores, so the scenarios use the copy stored before the upgrade.
+      CODE[$P:mn:$n]=${CODE[old:mn:$n]}
+      known "$P/mn store passage-2 code $n: new upload rejected by the VM static validation ($(why | grep -o 'Wasm contract [^:]*: [0-9]*' | head -1)); scenarios use the code stored before the upgrade"
+    else bad "$P/mn store passage-2 code $n: $(why)"; fi
   done
 }
 
@@ -406,33 +412,36 @@ multisig_suite() { # set group-code multisig-code
   [ "$(delta $U3 $r0)" = 5000 ] && ok "$tag funds sent by multisig" || bad "$tag funds sent by multisig: $(delta $U3 $r0)"
 }
 
+cid() { echo "${CODE[$1]:-}"; }   # code id, empty when the code could not be stored
+
 run_all() {
   local a="$P:art" m="$P:mn" n
-  ART_FO=""; ART_FR=""; ART_MINTER=""; ART_COLL=""; ART_MK=""; ART_AU=""; ART_VA=""; MN_MS=""
+  ART_FO=""; ART_FR=""; ART_MINTER=""; ART_COLL=""; ART_MK=""; ART_AU=""; ART_VA=""
+  MN_MS=""; MN_MINTER=""; MN_COLL=""; MN_MK31=""; MN_MK27=""; MN_MK3=""
   store_all
-  social_suite art ${CODE[$a:follow]} ${CODE[$a:friend]};                  ART_FO=$FO; ART_FR=$FR
-  royalty_suite art ${CODE[$a:royalty_group]}
-  classic_suite art ${CODE[$a:minter]} ${CODE[$a:pg721]}
-  nft_suite art ${CODE[$a:whitelist]} ${CODE[$a:pg721_metadata_onchain]} ${CODE[$a:minter_metadata_onchain]}
+  social_suite art "$(cid $a:follow)" "$(cid $a:friend)";                     ART_FO=$FO; ART_FR=$FR
+  royalty_suite art "$(cid $a:royalty_group)"
+  classic_suite art "$(cid $a:minter)" "$(cid $a:pg721)"
+  nft_suite art "$(cid $a:whitelist)" "$(cid $a:pg721_metadata_onchain)" "$(cid $a:minter_metadata_onchain)"
   ART_MINTER=$MINTER; ART_COLL=$COLL
   if [ -n "$ART_COLL" ]; then
-    market_suite art ${CODE[$a:marketplace_v2]} $ART_COLL 5;               ART_MK=$MK
-    auction_suite art ${CODE[$a:auction_english]} $ART_COLL 6;             ART_AU=$AU
-    vault_suite art ${CODE[$a:nft_vault]} $ART_COLL 7 ${ART_FO:-$VAL};     ART_VA=$VA
+    market_suite art "$(cid $a:marketplace_v2)" $ART_COLL 5;                  ART_MK=$MK
+    auction_suite art "$(cid $a:auction_english)" $ART_COLL 6;                ART_AU=$AU
+    vault_suite art "$(cid $a:nft_vault)" $ART_COLL 7 ${ART_FO:-$VAL};        ART_VA=$VA
   fi
   [ $MN = 1 ] || return 0
-  nft_suite mn ${CODE[$m:28]} ${CODE[$m:5]} ${CODE[$m:2]} ${CODE[$m:1]}
+  nft_suite mn "$(cid $m:28)" "$(cid $m:5)" "$(cid $m:2)" "$(cid $m:1)";        MN_MINTER=$MINTER; MN_COLL=$COLL
   if [ -n "$COLL" ]; then
-    market_suite mn-31 ${CODE[$m:31]} $COLL 5
-    market_suite mn-27 ${CODE[$m:27]} $COLL 6
-    market_suite mn-3  ${CODE[$m:3]}  $COLL 7
+    market_suite mn-31 "$(cid $m:31)" $COLL 5;                                MN_MK31=$MK
+    market_suite mn-27 "$(cid $m:27)" $COLL 6;                                MN_MK27=$MK
+    market_suite mn-3  "$(cid $m:3)"  $COLL 7;                                MN_MK3=$MK
   fi
-  submsg_lock_check mn ${CODE[$m:2]} ${CODE[$m:5]}
-  for n in 1 5 32 33; do pg_suite mn-pg$n ${CODE[$m:$n]}; done
-  multisig_suite mn ${CODE[$m:29]} ${CODE[$m:30]};                          MN_MS=$MS
+  submsg_lock_check mn "$(cid $m:2)" "$(cid $m:5)"
+  for n in 1 5 32 33; do pg_suite mn-pg$n "$(cid $m:$n)"; done
+  multisig_suite mn "$(cid $m:29)" "$(cid $m:30)";                             MN_MS=$MS
   if [ -n "$ART_MINTER" ]; then
-    t "$P/mn migrate minter to passage-2 code 2" tx $BIN wasm migrate $ART_MINTER ${CODE[$m:2]} '{}' --from val
-    t "$P/mn migrate minter back to the artifact code" tx $BIN wasm migrate $ART_MINTER ${CODE[$a:minter_metadata_onchain]} '{}' --from val
+    t "$P/mn migrate minter to passage-2 code 2" tx $BIN wasm migrate $ART_MINTER "$(cid $m:2)" '{}' --from val
+    t "$P/mn migrate minter back to the artifact code" tx $BIN wasm migrate $ART_MINTER "$(cid $a:minter_metadata_onchain)" '{}' --from val
   fi
 }
 
@@ -484,6 +493,14 @@ if [ -n "$ART_MK" ] && [ -n "$ART_AU" ] && [ -n "$ART_VA" ] && [ -n "$ART_FR" ];
   fi
   PEND_MK=$ART_MK; PEND_AU=$ART_AU; PEND_VA=$ART_VA; PEND_FR=$ART_FR; PEND_COLL=$ART_COLL; PEND_MINTER=$ART_MINTER; PEND_FO=$ART_FO
 fi
+# passage-2 code instantiated on the old binary, executed again after the upgrade (the new VM
+# compiles the stored code again; passage-2 has live minter and marketplace contracts on it).
+PEND_MN_MINTER=${MN_MINTER:-}; PEND_MN_COLL=${MN_COLL:-}; PEND_MN_MK31=${MN_MK31:-}; PEND_MN_MK27=${MN_MK27:-}; PEND_MN_MK3=${MN_MK3:-}
+if [ -n "$PEND_MN_MK31" ] && [ -n "$PEND_MN_MK27" ]; then
+  t "pending: approve passage-2 code 31 marketplace" approve u1 $PEND_MN_COLL $PEND_MN_MK31 8
+  t "pending: ask on the passage-2 code 31 marketplace" ex $BIN u1 $PEND_MN_MK31 "{\"set_ask\":{\"token_id\":\"8\",\"price\":$(coin 2000000),\"funds_recipient\":null}}"
+  t "pending: offer on the passage-2 code 27 marketplace" ex $BIN u2 $PEND_MN_MK27 "{\"set_bid\":{\"token_id\":\"9\",\"price\":$(coin 2500000)}}" --amount 2500000upasg
+fi
 
 step "software upgrade $UPG"
 GOV=$($OLD q auth module-account gov --home $A -o json | jq -r '[..|.address?|select(.!=null)][0]')
@@ -532,6 +549,20 @@ if [ $PEND = 1 ]; then
   t  "pending: finalize auction started before the upgrade" ex $BIN val $PEND_AU '{"finalize_auction":{"token_id":"9"}}'
   [ "$(owner $PEND_COLL 9)" = "$U3" ] && ok "pending: auction winner owns NFT" || bad "pending: auction winner owns NFT"
 fi
+if [ -n "$PEND_MN_MINTER" ]; then
+  step "passage-2 contracts instantiated before the upgrade"
+  n0=$(qs $PEND_MN_COLL '{"num_tokens":{}}' | jq -r .count)
+  t  "pending: public mint on the passage-2 code 2 minter" ex $BIN u3 $PEND_MN_MINTER '{"mint":{}}' --amount 1000000upasg
+  qc "pending: passage-2 code 5 collection minted through the code 2 minter" $PEND_MN_COLL '{"num_tokens":{}}' ".count==$((n0+1))"
+fi
+if [ -n "$PEND_MN_MK31" ] && [ -n "$PEND_MN_MK27" ]; then
+  t  "pending: buy on the passage-2 code 31 marketplace" ex $BIN u2 $PEND_MN_MK31 "{\"set_bid\":{\"token_id\":\"8\",\"price\":$(coin 2000000)}}" --amount 2000000upasg
+  [ "$(owner $PEND_MN_COLL 8)" = "$U2" ] && ok "pending: code 31 buyer owns NFT" || bad "pending: code 31 buyer owns NFT"
+  t  "pending: approve passage-2 code 27 marketplace" approve u1 $PEND_MN_COLL $PEND_MN_MK27 9
+  t  "pending: accept offer on the passage-2 code 27 marketplace" ex $BIN u1 $PEND_MN_MK27 "{\"accept_bid\":{\"token_id\":\"9\",\"bidder\":\"$U2\"}}"
+  [ "$(owner $PEND_MN_COLL 9)" = "$U2" ] && ok "pending: code 27 offer bidder owns NFT" || bad "pending: code 27 offer bidder owns NFT"
+fi
+[ -n "$PEND_MN_MK3" ] && qc "pending: passage-2 code 3 marketplace answers queries" $PEND_MN_MK3 '{"ask":{"token_id":"7"}}' 'has("ask")'
 
 step "scenarios on the new binary (fresh code)"
 run_all
@@ -552,7 +583,8 @@ awk '
   END {
     for (n in names) {
       o = r["old", n]; w = r["new", n]
-      if (o == "PASS" && w != "PASS") print "REGRESSION: " n " (old PASS, new " (w == "" ? "missing" : w) ")"
+      if (o == "PASS" && w == "KNOWN") print "CHANGED: " n " (old PASS, new KNOWN: explained in summary.txt)"
+      else if (o == "PASS" && w != "PASS") print "REGRESSION: " n " (old PASS, new " (w == "" ? "missing" : w) ")"
       else if (o != "PASS" && o != "" && w == "PASS") print "FIXED: " n
       else if (o == "FAIL" && w == "FAIL") print "BOTH FAIL: " n
     } }' "$OUT/summary.txt" | sort | tee "$OUT/compare.txt"

@@ -84,6 +84,22 @@ artifacts and every distinct contract code stored on passage-2 across the same
 upgrade (raw contract state compared before and after, in-flight orders,
 auctions and proposals completed after the upgrade, old/new outcomes compared).
 
+Contract code under wasmvm 2.2.9 (from `make test-contracts`):
+
+- Contracts instantiated from passage-2 code before the upgrade execute after it:
+  a public mint on a code 2 minter (minting into its code 5 collection through a
+  submessage), a sale on a code 31 marketplace with an ask set before the
+  upgrade, an offer made before the upgrade accepted on a code 27 marketplace,
+  queries on a code 3 marketplace, and a cw3 multisig (code 30) proposal voted
+  and executed.
+- A new upload of passage-2 code 2 (minter-metadata-onchain 0.4.0) is rejected
+  by the VM static validation: "Wasm contract contains function with more than
+  100 locals: 121". The stored code id 2 is unaffected: its existing contracts
+  run and new contracts can still be instantiated from it. Only a re-upload of
+  that build fails.
+- Every other passage-2 code and every `passage-contracts` artifact stores,
+  instantiates and runs its scenarios as on v4.0.3.
+
 ## Build and local rehearsal
 
 On Linux with glibc, install Go 1.25.14 and a native GCC and patchelf, then run:
