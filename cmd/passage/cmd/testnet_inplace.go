@@ -33,7 +33,7 @@ func addInPlaceTestnetCommand(rootCmd *cobra.Command, a appCreator) {
 		if c.Name() != "in-place-testnet" {
 			continue
 		}
-		c.Flags().String(flagScheduleUpgrade, "", "Schedule this upgrade plan (example: v4.1.0); the node halts there for the next binary")
+		c.Flags().String(flagScheduleUpgrade, "", "Schedule this upgrade plan (the next upgrade name); the node halts there for the next binary")
 		c.Flags().Int64(flagScheduleUpgradeDelay, 20, "Blocks between the current height and the scheduled upgrade")
 		c.Flags().String(flagAccountsToFund, "", "Comma-separated bech32 accounts funded with 10,000,000 PASG each (the operator is always funded)")
 	}

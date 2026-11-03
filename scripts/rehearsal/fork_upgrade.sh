@@ -3,9 +3,9 @@
 #
 #   SRC_HOME  home of a STOPPED passage-2 node, or a filesystem snapshot of it (never written)
 #   WORK      empty directory on the same filesystem (cp --reflink when supported)
-#   OLD_BIN   current release + `in-place-testnet` (branch rehearsal/v4.0.3-in-place-testnet)
-#   NEW_BIN   candidate binary (v4.1.0)
-#   UPG       upgrade name (default v4.1.0)     DELAY  blocks until the upgrade (default 20)
+#   OLD_BIN   version running on mainnet, with `passage in-place-testnet` (see README.md)
+#   NEW_BIN   candidate binary
+#   UPG       upgrade plan name of the candidate     DELAY  blocks until the upgrade (default 20)
 #   PORT_OFFSET  added to every port, so a live node on the same host is not disturbed (default 1000)
 #
 # The copy gets a new validator key and node key, no peers or seeds, and listens on
@@ -13,7 +13,7 @@
 # and halts there; the new binary runs the upgrade. Results: $WORK/out/summary.txt
 set -u
 SRC_HOME=${SRC_HOME:?set SRC_HOME}; WORK=${WORK:?set WORK}; OLD_BIN=${OLD_BIN:?set OLD_BIN}; NEW_BIN=${NEW_BIN:?set NEW_BIN}
-UPG=${UPG:-v4.1.0}; DELAY=${DELAY:-20}; O=${PORT_OFFSET:-1000}; CHAIN=${CHAIN:-passage-fork}
+UPG=${UPG:?set UPG (upgrade plan name)}; DELAY=${DELAY:-20}; O=${PORT_OFFSET:-1000}; CHAIN=${CHAIN:-passage-fork}
 H=$WORK/home; OUT=$WORK/out; RPC=tcp://127.0.0.1:$((26657 + O))
 mkdir -p "$OUT"; : > "$OUT/summary.txt"
 step()  { echo; echo "=== $(date +%T) $*"; }
