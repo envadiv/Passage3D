@@ -218,7 +218,7 @@ func reindexEvents(cmd *cobra.Command, args reindexArgs) error {
 				for idx, txResult := range resp.TxResults {
 					tr := abcitypes.TxResult{
 						Height: height,
-						Index:  uint32(idx),
+						Index:  uint32(idx), //nolint:gosec // tx position in a block, far below 2^32
 						Tx:     block.Txs[idx],
 						Result: *txResult,
 					}

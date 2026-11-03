@@ -2,46 +2,61 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
-
-	appparams "github.com/envadiv/Passage3D/app/params"
+	"slices"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	confixcmd "cosmossdk.io/tools/confix/cmd"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/envadiv/Passage3D/app"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/envadiv/Passage3D/app"
+	passageante "github.com/envadiv/Passage3D/app/ante"
+	appparams "github.com/envadiv/Passage3D/app/params"
 )
 
+// DefaultMinGasPrices is the minimum-gas-prices written to a new app.toml. Nodes
+// refuse to start with a lower value (see newApp), as in Passage v2.x.
+var DefaultMinGasPrices = passageante.DefaultMinGasPrice + passageante.BaseDenom
+
 // basicManager is built once from a throwaway app so every AppModuleBasic
-// carries its codecs (0.50 â a bare AppModuleBasic{} nil-panics in GetTxCmd).
+// carries its codecs (0.50: a bare AppModuleBasic{} nil-panics in GetTxCmd).
 var basicManager module.BasicManager
 
 type rootAppOptions struct{ home string }
@@ -53,24 +68,22 @@ func (o rootAppOptions) Get(k string) interface{} {
 	return nil
 }
 
-func rootTempDir() string {
-	dir, err := os.MkdirTemp("", "passage-cli")
-	if err != nil {
-		return app.DefaultNodeHome
-	}
-	return dir
-}
-
-// NewRootCmd creates a new root command for simd. It is called once in the
+// NewRootCmd creates a new root command for passage. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 
-	tmpHome := rootTempDir()
+	// The throwaway app only provides the module basics and autocli options. Its
+	// home (wasm cache) lives in a temp dir that is removed right away.
+	tmpHome, err := os.MkdirTemp("", "passage-cli")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(tmpHome)
 	tempApp := app.NewPassageApp(
 		log.NewNopLogger(), dbm.NewMemDB(), nil, false,
 		map[int64]bool{}, tmpHome, uint(1), encodingConfig,
-		app.GetEnabledProposals(), rootAppOptions{home: tmpHome}, []wasm.Option(nil),
+		app.GetEnabledProposals(), rootAppOptions{home: tmpHome}, []wasmkeeper.Option(nil),
 	)
 	basicManager = tempApp.BasicModuleManager
 
@@ -82,16 +95,18 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithHomeDir(app.DefaultNodeHome).
-		WithViper("") // In simapp, we don't use any prefix for env variables.
+		WithViper("") // no prefix for env variables
 
 	rootCmd := &cobra.Command{
-		Use:   "passage",
-		Short: "passage app",
+		Use:           "passage",
+		Short:         "Passage daemon (server and client)",
+		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
+			initClientCtx = initClientCtx.WithCmdContext(cmd.Context())
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -100,6 +115,21 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
 			if err != nil {
 				return err
+			}
+
+			// SIGN_MODE_TEXTUAL (enabled on the node) needs a client-side tx config
+			// that can query coin metadata, so it is only available online. This
+			// must run after ReadFromClientConfig, which sets the RPC client.
+			if !initClientCtx.Offline {
+				enabledSignModes := append(slices.Clone(authtx.DefaultSignModes), signing.SignMode_SIGN_MODE_TEXTUAL)
+				txConfig, err := authtx.NewTxConfigWithOptions(initClientCtx.Codec, authtx.ConfigOptions{
+					EnabledSignModes:           enabledSignModes,
+					TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
+				})
+				if err != nil {
+					return err
+				}
+				initClientCtx = initClientCtx.WithTxConfig(txConfig)
 			}
 
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
@@ -123,58 +153,25 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 	return rootCmd, encodingConfig
 }
 
-// initAppConfig helps to override default appConfig template and configs.
-// return "", nil if no custom configuration is required for the application.
+// initAppConfig returns the app.toml template and default values: SDK server
+// config + the [wasm] section, with Passage's minimum gas price.
 func initAppConfig() (string, interface{}) {
-	// The following code snippet is just for reference.
-
-	// WASMConfig defines configuration for the wasm module.
-	type WASMConfig struct {
-		// This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
-		QueryGasLimit uint64 `mapstructure:"query_gas_limit"`
-
-		// Address defines the gRPC-web server to listen on
-		LruSize uint64 `mapstructure:"lru_size"`
-	}
-
 	type CustomAppConfig struct {
 		serverconfig.Config
 
-		WASM WASMConfig `mapstructure:"wasm"`
+		Wasm wasmtypes.NodeConfig `mapstructure:"wasm"`
 	}
 
-	// Optionally allow the chain developer to overwrite the SDK's default
-	// server config.
 	srvCfg := serverconfig.DefaultConfig()
-	// The SDK's default minimum gas price is set to "" (empty value) inside
-	// app.toml. If left empty by validators, the node will halt on startup.
-	// However, the chain developer can set a default app.toml value for their
-	// validators here.
-	//
-	// In summary:
-	// - if you leave srvCfg.MinGasPrices = "", all validators MUST tweak their
-	//   own app.toml config,
-	// - if you set srvCfg.MinGasPrices non-empty, validators CAN tweak their
-	//   own app.toml to override, or use this default value.
-	//
-	// In simapp, we set the min gas prices to 0.
-	srvCfg.MinGasPrices = "0upasg"
+	// Nodes refuse to start below this value (see newApp).
+	srvCfg.MinGasPrices = DefaultMinGasPrices
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
-		WASM: WASMConfig{
-			LruSize:       1,
-			QueryGasLimit: 300000,
-		},
+		Wasm:   wasmtypes.DefaultNodeConfig(),
 	}
 
-	customAppTemplate := serverconfig.DefaultConfigTemplate + `
-[wasm]
-# This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
-query_gas_limit = 300000
-# This is the number of wasm vm instances we keep cached in memory for speed-up
-# Warning: this is currently unstable and may lead to crashes, best to keep for 0 unless testing locally
-lru_size = 0`
+	customAppTemplate := serverconfig.DefaultConfigTemplate + wasmtypes.DefaultConfigTemplate()
 
 	return customAppTemplate, customAppConfig
 }
@@ -183,20 +180,30 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
+	a := appCreator{encodingConfig}
+	valAddrCodec := authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basicManager, app.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator, authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())),
+		// Top-level genesis commands kept for backwards compatibility with v2.x
+		// scripts and docs; the same commands are also under `passage genesis`.
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator, valAddrCodec),
 		genutilcli.MigrateGenesisCmd(genutilcli.MigrationMap),
-		genutilcli.GenTxCmd(basicManager, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix())),
+		genutilcli.GenTxCmd(basicManager, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, valAddrCodec),
 		genutilcli.ValidateGenesisCmd(basicManager),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
+		genutilcli.Commands(encodingConfig.TxConfig, basicManager, app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
+		confixcmd.ConfigCommand(),
+		pruning.Cmd(a.newApp, app.DefaultNodeHome),
+		snapshot.Cmd(a.newApp),
 	)
 
-	a := appCreator{encodingConfig}
 	server.AddCommands(rootCmd, app.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	// `passage comet unsafe-reset-all` also clears the wasm directory.
+	wasmcli.ExtendUnsafeResetAllCmd(rootCmd)
 
 	// Expose CometBFT event re-indexing as `passage comet reindex-event`
 	// (validator request post-v4.0.2; CLI-only, no consensus impact).
@@ -206,18 +213,21 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		}
 	}
 
-	// add keybase, auxiliary RPC, query, and tx child commands
+	// add keybase, auxiliary RPC, query, and tx child commands. Module commands
+	// are added by autocli (EnhanceRootCommand), including the hand-written ones.
 	rootCmd.AddCommand(
 		server.StatusCommand(),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
 	)
-
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
+	// --wasm.* flags; also verifies at start that the linked libwasmvm matches
+	// the wasmvm Go module version.
+	wasm.AddModuleInitFlags(startCmd)
 }
 
 func queryCommand() *cobra.Command {
@@ -225,19 +235,20 @@ func queryCommand() *cobra.Command {
 		Use:                        "query",
 		Aliases:                    []string{"q"},
 		Short:                      "Querying subcommands",
-		DisableFlagParsing:         true,
+		DisableFlagParsing:         false,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 
 	cmd.AddCommand(
 		rpc.ValidatorCommand(),
+		rpc.QueryEventForTxCmd(),
+		server.QueryBlockCmd(),
+		server.QueryBlocksCmd(),
+		server.QueryBlockResultsCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
-
-	basicManager.AddQueryCommands(cmd)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
@@ -246,7 +257,7 @@ func txCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
-		DisableFlagParsing:         true,
+		DisableFlagParsing:         false,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
@@ -260,10 +271,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
+		authcmd.GetSimulateCmd(),
 	)
-
-	basicManager.AddTxCommands(cmd)
-	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
@@ -274,12 +283,30 @@ type appCreator struct {
 
 // newApp is an appCreator
 func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+	baseappOptions := server.DefaultBaseappOptions(appOpts)
+
+	// Passage minimum gas price floor (12.5upasg). v2.x refused to start below it;
+	// v4.0.0-v4.0.3 had no floor and wrote "0upasg" into new app.toml files, so a
+	// hard failure would stop such validators at the v4.0.4 upgrade height. Instead
+	// the floor is applied (with a warning) on top of the configured prices.
+	minGasPrices, err := sdk.ParseDecCoins(cast.ToString(appOpts.Get(server.FlagMinGasPrices)))
+	if err != nil {
+		panic(fmt.Errorf("invalid minimum-gas-prices: %w", err))
+	}
+	if err := passageante.ValidateMinGasPrices(minGasPrices); err != nil {
+		floor := sdk.NewDecCoinFromDec(passageante.BaseDenom, sdkmath.LegacyMustNewDecFromStr(passageante.DefaultMinGasPrice))
+		enforced := minGasPrices.Sub(sdk.NewDecCoins(sdk.NewDecCoinFromDec(passageante.BaseDenom, minGasPrices.AmountOf(passageante.BaseDenom)))).Add(floor)
+		logger.Warn("minimum-gas-prices below the Passage floor; using the floor instead",
+			"configured", minGasPrices.String(), "enforced", enforced.String())
+		baseappOptions = append(baseappOptions, baseapp.SetMinGasPrices(enforced.String()))
+	}
+
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
 
-	var wasmOpts []wasm.Option
+	var wasmOpts []wasmkeeper.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
@@ -292,31 +319,29 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		app.GetEnabledProposals(),
 		appOpts,
 		wasmOpts,
-		server.DefaultBaseappOptions(appOpts)...,
+		baseappOptions...,
 	)
 }
 
-// appExport creates a new simapp (optionally at a given height)
-// and exports state.
+// appExport creates a new app (optionally at a given height) and exports state.
 func (a appCreator) appExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions, modulesToExport []string) (servertypes.ExportedApp, error) {
-
-	var simApp *app.PassageApp
+	appOpts servertypes.AppOptions, modulesToExport []string,
+) (servertypes.ExportedApp, error) {
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
-	var emptyWasmOpts []wasm.Option = nil
-	if height != -1 {
-		simApp = app.NewPassageApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, app.GetEnabledProposals(), appOpts, emptyWasmOpts)
 
-		if err := simApp.LoadHeight(height); err != nil {
+	var passageApp *app.PassageApp
+	if height != -1 {
+		passageApp = app.NewPassageApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), a.encCfg, app.GetEnabledProposals(), appOpts, nil)
+		if err := passageApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		simApp = app.NewPassageApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, app.GetEnabledProposals(), appOpts, emptyWasmOpts)
+		passageApp = app.NewPassageApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), a.encCfg, app.GetEnabledProposals(), appOpts, nil)
 	}
 
-	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return passageApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }

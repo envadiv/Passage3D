@@ -88,10 +88,10 @@ Example:
 	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
 	cmd.Flags().StringP(flagOutputDir, "o", "./mytestnet", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
-	cmd.Flags().String(flagNodeDaemonHome, "simd", "Home directory of the node's daemon configuration")
+	cmd.Flags().String(flagNodeDaemonHome, "passage", "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().String(server.FlagMinGasPrices, DefaultMinGasPrices, "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (Passage nodes require at least 12.5upasg)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
@@ -128,6 +128,7 @@ func InitTestnet(
 	simappConfig := srvconfig.DefaultConfig()
 	simappConfig.MinGasPrices = minGasPrices
 	simappConfig.API.Enable = true
+	simappConfig.API.Swagger = true
 	simappConfig.Telemetry.Enabled = true
 	simappConfig.Telemetry.PrometheusRetentionTime = 60
 	simappConfig.Telemetry.EnableHostnameLabel = false
@@ -216,7 +217,8 @@ func InitTestnet(
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
+			// 10% commission, 20% max, 1% max daily change (>= the 5% minimum).
+			stakingtypes.NewCommissionRates(sdkmath.LegacyNewDecWithPrec(10, 2), sdkmath.LegacyNewDecWithPrec(20, 2), sdkmath.LegacyNewDecWithPrec(1, 2)),
 			sdkmath.OneInt(),
 		)
 		if err != nil {
@@ -298,6 +300,12 @@ func initGenFiles(
 		bankGenState.Supply = bankGenState.Supply.Add(bal.Coins...)
 	}
 	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
+
+	// Same minimum validator commission as passage-2 (set on mainnet by v4.0.0).
+	var stakingGenState stakingtypes.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakingGenState)
+	stakingGenState.Params.MinCommissionRate = sdkmath.LegacyNewDecWithPrec(5, 2)
+	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenState)
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
 	if err != nil {
