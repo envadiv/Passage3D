@@ -2,8 +2,10 @@ package v4_1_0
 
 import (
 	"context"
+	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -22,7 +24,8 @@ const Name = "v4.1.0"
 
 // Upgrade coordinates the consensus-breaking CosmWasm security update.
 // No stores are added, renamed, or deleted. Existing contract state and chain
-// parameters are retained; RunMigrations applies dependency module migrations.
+// parameters are retained; the handler repairs duplicate account numbers
+// (FixDuplicateAccountNumbers) and RunMigrations applies dependency module migrations.
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          Name,
 	CreateUpgradeHandler: CreateUpgradeHandler,
@@ -33,7 +36,7 @@ func CreateUpgradeHandler(
 	configurator module.Configurator,
 	_ distribution.Keeper,
 	_ bank.Keeper,
-	_ auth.AccountKeeper,
+	ak auth.AccountKeeper,
 	_ claim.Keeper,
 	_ consensusparamkeeper.Keeper,
 	_ paramskeeper.Keeper,
@@ -41,6 +44,14 @@ func CreateUpgradeHandler(
 	_ govkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		logger := sdk.UnwrapSDKContext(ctx).Logger().With("upgrade", Name)
+
+		changed, err := FixDuplicateAccountNumbers(ctx, ak)
+		if err != nil {
+			return nil, fmt.Errorf("fixing duplicate account numbers: %w", err)
+		}
+		logger.Info("repaired account numbers", "accounts", changed)
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }

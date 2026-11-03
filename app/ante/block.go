@@ -46,7 +46,11 @@ func handleMessages(cdc codec.Codec, msgs []sdk.Msg) error {
 				return err
 			}
 		} else if _, ok := msg.(*distributiontypes.MsgFundCommunityPool); ok {
-			return nil
+			// Funding the community pool is the only action allowed for the
+			// blocked account. Skip this message but keep checking the rest of
+			// the tx: returning here (pre-v4.0.4) let any message placed after a
+			// MsgFundCommunityPool bypass the restriction.
+			continue
 		}
 
 		signers, _, sgErr := cdc.GetMsgV1Signers(msg)
