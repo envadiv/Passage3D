@@ -1,62 +1,9 @@
 version: 2
 updates:
-- package-ecosystem: github-actions
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-- package-ecosystem: npm
-  directory: "/docs"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  reviewers:
-  - anilcse
-- package-ecosystem: gomod
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/db"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/api"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/orm"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/container"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
-- package-ecosystem: gomod
-  directory: "/cosmovisor"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  labels:
-  - automerge
-  - dependencies
+  # GitHub Actions versions only. Go module updates (cosmos-sdk, wasmd, cometbft, ...) can change
+  # consensus behaviour and go through a reviewed upgrade instead.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

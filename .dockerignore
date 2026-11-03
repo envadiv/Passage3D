@@ -1,0 +1,11 @@
+# Keep .git: the Makefile derives version and commit from it.
+build/
+artifacts/
+dist/
+mytestnet/
+.serena/
+.idea/
+.vscode/
+*.bak
+*.stackdump
+**/*.log
