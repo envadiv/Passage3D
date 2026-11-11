@@ -62,21 +62,25 @@
 
 ### Build from source instead
 
-You need git, make, gcc and Go 1.23.2 or newer (the release is built with Go 1.25.14). The Go
-module and build caches take about 3 GB.
+You need git, make, gcc and Go 1.21 or newer installed. The build itself must use Go 1.25 (the
+release is built with Go 1.25.14). The Go module and build caches take about 3 GB.
 
 ```sh
 git clone https://github.com/envadiv/Passage3D passage-4.1.0
 cd passage-4.1.0
 git checkout v4.1.0
 git rev-parse HEAD     # e5cb0c5554e15ddfb7e60297406ed14756e45026
-make build             # writes build/passage
-./build/passage version --long | grep -E '^(version|commit):'
-# version: 4.1.0
+GOTOOLCHAIN=go1.25.14 make build   # writes build/passage
+./build/passage version --long | grep -E '^(version|commit|go):'
 # commit: e5cb0c5554e15ddfb7e60297406ed14756e45026
+# go: go version go1.25.14 linux/amd64
+# version: 4.1.0
 ./build/passage query wasm libwasmvm-version   # 2.2.9
 ```
 
+- `GOTOOLCHAIN=go1.25.14` makes Go download Go 1.25.14 and use it for this build, whatever Go
+  version is installed. Go 1.26 and newer cannot build v4.1.0: the dependency
+  `github.com/bytedance/sonic v1.14.0` fails with `undefined: GoMapIterator`.
 - `make build` writes only `build/passage`. Do not run `make install` before the halt: it
   replaces `$GOPATH/bin/passage`, which may be the binary your node runs.
 - This binary loads libwasmvm 2.2.9 from the Go module cache of the user who built it
